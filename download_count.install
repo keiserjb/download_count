@@ -1,0 +1,18 @@
+<?php
+// $Id$
+
+function download_count_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("CREATE TABLE if not exists {file_downloads} (
+        filename varchar(255) character set utf8 NOT NULL,
+        count int(11) NOT NULL default '0',
+		timestamp int(11) NOT NULL default '0',
+		UNIQUE KEY filename (filename)
+		) /*!40100 DEFAULT CHARACTER SET utf8 */");
+      break;
+    case 'pgsql':
+	  break;
+  }
+}

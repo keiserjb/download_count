@@ -1,0 +1,92 @@
+<?php /* $Id$ */
+/**
+ * @file Download counter
+ */ 
+ /**
+ * Implementation of hook_help()
+ */
+function download_count_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      // This description is shown in the listing at admin/modules.
+      return t('Increments a filename counter each time an attached file is downloaded, and logs a descriptive message.');
+  }
+}
+/**
+ * Implementation of hook_perm()
+ */
+function download_count_perm() {
+  $perms = array();
+  $perms[] = 'view downloads count';
+  return $perms;
+}
+/**
+ * Implementation of hook_menu()
+ */
+function download_count_menu($may_cache) {
+  $items = array();
+  $access = user_access('view downloads count');
+
+  if ($may_cache) {
+    $items[] = array('path' => 'download_counter', 
+      'title' => t('download count'),
+      'callback' => 'download_count_view_page',
+      'access' => $access,
+      'type' => MENU_NORMAL_ITEM);
+  }
+  return $items;
+}
+function download_count_view_page() {
+
+  drupal_set_title('Download center');
+
+  $header[] = array('data' => t('filename'), 'field' => 'filename');
+  $header[] = array('data' => t('download count'), 'field' => 'count', 'sort' => 'desc');
+  $header[] = array('data' => t('last download'), 'field' => 'timestamp');
+  
+  $rows = array();
+
+  $result = db_query("SELECT f.filename, f.count, f.timestamp FROM {file_downloads} f" . tablesort_sql($header));
+  while ($file = db_fetch_object($result)) {
+    $row = array();
+    $row[] = $file->filename;
+	$row[] = $file->count;	
+	$row[] = format_interval(time() - $file->timestamp) . ' ago';	
+	$rows[] = $row;	
+  }
+
+  if (empty($rows)) {
+    $rows[] = array(array('data' => t('No file attachment has been downloaded.'), 'colspan' => '3'));
+  }
+
+  $output = theme('table', $header, $rows, array('class' => 'download_count'));
+
+  return $output;
+}
+/**
+ * Implementation of file_download()
+ */
+function download_count_file_download($filename) {
+
+  $file = file_create_path($filename);
+  $result = db_query("SELECT f.* FROM {files} f WHERE filepath = '%s'", $file);
+  if ($file = db_fetch_object($result)) {
+    if (user_access('view uploaded files') && node_access('view', node_load($file->nid))) { 
+      $message = t('%file was downloaded', array('%file' => theme('placeholder', $filename)));
+      watchdog('download', $message, WATCHDOG_NOTICE);		
+      // If the file is already added, just increment the count, 
+      // otherwise add the file with count 1
+      if(db_result(db_query("SELECT filename FROM {file_downloads} WHERE filename = '%s'", $filename))) {
+        db_query("UPDATE {file_downloads} SET count = count+1 WHERE filename = '%s'", $filename);
+		db_query("UPDATE {file_downloads} SET timestamp = %d WHERE filename = '%s'", time(), $filename);
+      } 
+	  else {
+        db_query("INSERT INTO {file_downloads} (filename, count, timestamp) VALUES ('%s', 1,%d)", $filename, time());
+	  }			
+	} 
+	else {
+	  $message = t('Failed to download %file', array('%file' => theme('placeholder', $filename))); 	
+      watchdog('download', $message, WATCHDOG_WARNING);
+	}	
+  }
+}
