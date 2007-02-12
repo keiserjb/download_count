@@ -38,7 +38,7 @@ function download_count_menu($may_cache) {
 }
 function download_count_view_page() {
 
-  drupal_set_title('Download center');
+  drupal_set_title(t('Download center'));
 
   $header[] = array('data' => t('filename'), 'field' => 'filename');
   $header[] = array('data' => t('download count'), 'field' => 'count', 'sort' => 'desc');
