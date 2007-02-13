@@ -1,4 +1,4 @@
 ; $Id$
 name = download_count
-description = "Increments a filename counter and logs a descriptive message each time an attached file is downloaded."
+description = "Increments a download counter and logs a descriptive message each time an attached file is downloaded."
 
