@@ -9,7 +9,7 @@ function download_count_help($section) {
   switch ($section) {
     case 'admin/modules#description':
       // This description is shown in the listing at admin/modules.
-      return t('Increments a filename counter each time an attached file is downloaded, and logs a descriptive message.');
+      return t('Increments a download counter and logs a descriptive message each time an attached file is downloaded.');
   }
 }
 /**
