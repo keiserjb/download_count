@@ -17,7 +17,8 @@ function download_count_help($section) {
  */
 function download_count_perm() {
   $perms = array();
-  $perms[] = 'view downloads count';
+  $perms[] = 'view all downloads count';
+  $perms[] = 'view own nodes downloads count';
   return $perms;
 }
 /**
@@ -25,7 +26,7 @@ function download_count_perm() {
  */
 function download_count_menu($may_cache) {
   $items = array();
-  $access = user_access('view downloads count');
+  $access = user_access('view all downloads count')|| user_access('view own nodes downloads count');
 
   if ($may_cache) {
     $items[] = array('path' => 'download_counter', 
@@ -36,7 +37,10 @@ function download_count_menu($may_cache) {
   }
   return $items;
 }
+
 function download_count_view_page() {
+
+  global $user;
 
   drupal_set_title(t('Download center'));
 
@@ -46,7 +50,13 @@ function download_count_view_page() {
   
   $rows = array();
 
-  $result = db_query("SELECT f.filename, f.count, f.timestamp FROM {file_downloads} f" . tablesort_sql($header));
+  if(user_access('view all downloads count')) {
+    $result = db_query("SELECT f.filename, f.count, f.timestamp FROM {file_downloads} f" . tablesort_sql($header));
+	}
+	else {
+	  $result = db_query("SELECT fd.filename, fd.count, fd.timestamp FROM {file_downloads} fd JOIN {files} f ON fd.filename = f.filename JOIN {node} n ON n.nid = f.nid WHERE n.uid = %d" . tablesort_sql($header), $user->uid);
+	}
+	
   while ($file = db_fetch_object($result)) {
     $row = array();
     $row[] = $file->filename;
