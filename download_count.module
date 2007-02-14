@@ -19,6 +19,8 @@ function download_count_perm() {
   $perms = array();
   $perms[] = 'view all downloads count';
   $perms[] = 'view own nodes downloads count';
+  $perms[] = 'view all downloads count in nodes';
+  $perms[] = 'view own nodes downloads count in nodes';
   return $perms;
 }
 /**
@@ -94,6 +96,7 @@ function download_count_view_page() {
   
   return $output;
 }
+
 /**
  * Implementation of file_download()
  */
@@ -120,4 +123,68 @@ function download_count_file_download($filename) {
       watchdog('download', $message, WATCHDOG_WARNING);
 	}	
   }
+}
+/**
+ * Implementation of hook_nodeapi()
+ */
+function download_count_nodeapi(&$node, $op, $teaser) {
+  switch ($op) {
+    case 'view':
+      global $user; 
+      if (!$teaser && count($node->files)) {
+	    if (user_access('view all downloads count in nodes')) {
+		  $node->body = theme('download_count_body', $node);
+		}
+		else if (user_access('view own nodes downloads count in nodes') && ($node->uid == $user->uid)) {
+	  	  $node->body = theme('download_count_body', $node);
+		}
+	  }
+  }
+  return;
+}
+ 
+function theme_download_count_body($node, $showAll = false) {
+
+  $header[] = array('data' => t('Attachment'));
+  $header[] = array('data' => t('Size'));
+  $header[] = array('data' => t('Hits'));
+  $header[] = array('data' => t('Last download'));
+  $rows = array();
+  foreach ($node->files as $file) {
+    if ($file->list) {
+      $href = $file->fid ? file_create_url($file->filepath) : url(file_create_filename($file->filename, file_create_path()));
+      $text = $file->description ? $file->description : $file->filename;
+	  $pick = db_query("SELECT filename, count, timestamp FROM {file_downloads} WHERE filename = '%s'", $file->filename);
+	  if ($attach = db_fetch_object($pick)){
+	    $count = $attach->count;
+		$last = format_interval(time() - $attach->timestamp) . ' ago';	
+	  }
+	  else {
+	    $count = 0;
+		$last = t('Not yet downloaded');
+	  }	  
+      $rows[] = array(l($text, $href), format_size($file->filesize), $count, $last);
+    }
+  }
+  if (count($rows)) {
+    $attachments = theme('table', $header, $rows, array('id' => 'attachments'));
+  }
+
+  if (strstr($node->body, '<table')) {
+    $startpos = 0;
+    $lookagain = true;
+    while ($lookagain) {
+      if ($pos = strpos ($node->body, '<table', $startpos)) {
+        $position = $pos;
+        $startpos = $pos + 6;
+      } 
+	  else {
+        $lookagain = false;
+      }
+    }
+   } 
+   
+    $output = substr_replace($node->body, '', $position);
+  
+    return $output . $attachments;   
 }
