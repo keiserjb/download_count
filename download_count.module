@@ -49,7 +49,7 @@ function download_count_admin_page() {
 
   switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
     case FILE_DOWNLOADS_PUBLIC:
-	  $output = '<p>' . t('You are using public download. ') . l(t('Set your download method to private'),'admin/settings') . t(' if you wish for Drupal to keep a record of downloaded files.') . '</p>';
+	  $output = '<p>' . t('You are using public download. Set your download method to private on the ') . l('admin/settings', 'admin/settings') . t(' page (go in "File system settings"), if you wish for Drupal to keep a record of downloaded files.') . '</p>';
 	  break;
 	case FILE_DOWNLOADS_PRIVATE:
 	  $output = '<p>' . t('You are using the private download method, hence you have the correct setting to allow this module to keep a record of downloaded files.') . '</p>';
@@ -131,12 +131,9 @@ function download_count_nodeapi(&$node, $op, $teaser) {
   switch ($op) {
     case 'view':
       global $user; 
-      if (!$teaser && count($node->files)) {
-	    if (user_access('view all downloads count in nodes')) {
+      if (user_access('view uploaded files') && !$teaser && count($node->files)) {
+	    if (user_access('view all downloads count in nodes') || (user_access('view own nodes downloads count in nodes') && ($node->uid == $user->uid)) ) {
 		  $node->body = theme('download_count_body', $node);
-		}
-		else if (user_access('view own nodes downloads count in nodes') && ($node->uid == $user->uid)) {
-	  	  $node->body = theme('download_count_body', $node);
 		}
 	  }
   }
