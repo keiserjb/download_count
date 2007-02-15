@@ -131,7 +131,7 @@ function download_count_nodeapi(&$node, $op, $teaser) {
   switch ($op) {
     case 'view':
       global $user; 
-      if (user_access('view uploaded files') && !$teaser && count($node->files)) {
+      if (!$teaser && count($node->files)) {
 	    if (user_access('view all downloads count in nodes') || (user_access('view own nodes downloads count in nodes') && ($node->uid == $user->uid)) ) {
 		  $node->body = theme('download_count_body', $node);
 		}
@@ -140,13 +140,14 @@ function download_count_nodeapi(&$node, $op, $teaser) {
   return;
 }
  
-function theme_download_count_body($node, $showAll = false) {
+function theme_download_count_body($node) {
 
   $header[] = array('data' => t('Attachment'));
   $header[] = array('data' => t('Size'));
   $header[] = array('data' => t('Hits'));
   $header[] = array('data' => t('Last download'));
   $rows = array();
+  
   foreach ($node->files as $file) {
     if ($file->list) {
       $href = $file->fid ? file_create_url($file->filepath) : url(file_create_filename($file->filename, file_create_path()));
@@ -160,28 +161,28 @@ function theme_download_count_body($node, $showAll = false) {
 	    $count = 0;
 		$last = t('Not yet downloaded');
 	  }	  
-      $rows[] = array(l($text, $href), format_size($file->filesize), $count, $last);
+	  if (user_access('view uploaded files')) {
+        $rows[] = array(l($text, $href), format_size($file->filesize), $count, $last);
+      }
+	  else {
+	    $rows[] = array($file->filename, format_size($file->filesize), $count, $last);
+	  }
     }
   }
   if (count($rows)) {
     $attachments = theme('table', $header, $rows, array('id' => 'attachments'));
   }
+  else {
+    $attachments = '';
+  }
 
-  if (strstr($node->body, '<table')) {
-    $startpos = 0;
-    $lookagain = true;
-    while ($lookagain) {
-      if ($pos = strpos ($node->body, '<table', $startpos)) {
-        $position = $pos;
-        $startpos = $pos + 6;
-      } 
-	  else {
-        $lookagain = false;
-      }
+  if (strstr($node->body, '<table id="attachments"')) {
+    $start = strpos ($node->body, '<table id="attachments"');
+	$end = strpos ($node->body, '</table>', $start);
+   	return substr_replace($node->body, '', $start, $end - $start + 8) . $attachments;   
     }
-   } 
-   
-    $output = substr_replace($node->body, '', $position);
-  
-    return $output . $attachments;   
+    else {
+    return $node->body . $attachments;   
+    }
+
 }
