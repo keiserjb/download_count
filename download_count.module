@@ -31,23 +31,21 @@ function download_count_menu($may_cache) {
   $access = user_access('view all downloads count') || user_access('view own nodes downloads count');
 
   if ($may_cache) {  
-    $items[] = array('path' => 'admin/settings/download_count', 
-      'title' => t('download_count'),
-      'callback' => 'download_count_admin_page',
-      'type' => MENU_NORMAL_ITEM);
-	  
     $items[] = array('path' => 'download_counter', 
-      'title' => t('download count'),
+      'title' => t('download counter'),
       'callback' => 'download_count_view_page',
       'access' => $access,
       'type' => MENU_NORMAL_ITEM);
   }
+  
   return $items;
+  
 }
 
-function download_count_admin_page() {
+// Implementation of hook_settings()
+function download_count_settings() {
 
-  switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
+   switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
     case FILE_DOWNLOADS_PUBLIC:
 	  $output = '<p>' . t('You are using public download. Set your download method to private on the ') . l('admin/settings', 'admin/settings') . t(' page (go in "File system settings"), if you wish for Drupal to keep a record of downloaded files.') . '</p>';
 	  break;
@@ -56,28 +54,83 @@ function download_count_admin_page() {
 	  break;
   }
   
-  $output .= download_count_view_page();
-  return $output;
+  $form['info_on_download_method'] = array(
+    '#value' => $output,
+  );
   
+  $form['dounload count in nodes'] = array(
+    '#type' => 'fieldset', 
+    '#title' => t('Download count in nodes'), 
+    '#collapsible' => TRUE, 
+    '#collapsed' => FALSE, 
+  );
+  
+  $form['dounload count in nodes']['do_not_show_download_count_in_node_for_admin'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Do not show download count in the node view for the administrator'),
+    '#default_value' => variable_get('do_not_show_download_count_in_node_for_admin', FALSE),
+    '#description' => t('Check this if you do not want to see the download count in the node view.'),
+  );
+  
+  $form['download counter page'] = array(
+    '#type' => 'fieldset', 
+    '#title' => t('Download counter page'), 
+    '#collapsible' => TRUE, 
+    '#collapsed' => FALSE, 
+  );
+  
+  $form['download counter page']['download_counter_view_page_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#default_value' => variable_get('download_counter_view_page_title', t('Download counter')),
+    '#description' => t('Title of this ') . l('page', 'download_counter') . '.',  
+  );  
+  
+  $form['download counter page']['download_counter_view_page_header'] = array(
+    '#type' => 'textarea',
+	'#title' => t('Header'),
+    '#default_value' => variable_get('download_counter_view_page_header', t('')),
+    '#cols' => 60,
+    '#rows' => 6,
+    '#description' => t('Text to appear between the title of the page and the download counter table.'),
+  );
+  
+    $form['download counter page']['download_counter_view_page_footer'] = array(
+    '#type' => 'textarea',
+	'#title' => t('Footer'),
+    '#default_value' => variable_get('download_counter_view_page_footer', t('')),
+    '#cols' => 60,
+    '#rows' => 6,
+    '#description' => t('Text to appear underneath the download counter table.'),
+  );
+
+  $form['download counter page']['download_counter_view_page_format'] = filter_form(variable_get('download_counter_view_page_format', 2), 1, array('download_counter_view_page_format'));
+  
+   $form['info_on_access control'] = array(
+    '#value' => '<p>' . t('Visit the  ') . l('control access page', 'admin/access') . ' to allow roles to view download count in nodes and on the download counter page.</p>',
+  );
+  
+  return $form;
 }
 
 function download_count_view_page() {
 
   global $user;
 
-  drupal_set_title(t('Download center'));
+  drupal_set_title(variable_get('download_counter_view_page_title', t('Download counter')));
 
   $header[] = array('data' => t('filename'), 'field' => 'filename');
-  $header[] = array('data' => t('download count'), 'field' => 'count', 'sort' => 'desc');
+  $header[] = array('data' => t('hits'), 'field' => 'count', 'sort' => 'desc');
   $header[] = array('data' => t('last download'), 'field' => 'timestamp');
+  $header[] = array('data' => t('action'));
   
   $rows = array();
 
   if(user_access('view all downloads count')) {
-    $result = db_query("SELECT f.filename, f.count, f.timestamp FROM {file_downloads} f" . tablesort_sql($header));
+	  $result = db_query("SELECT fd.filename, fd.count, fd.timestamp, f.nid, n.type FROM {file_downloads} fd JOIN {files} f ON fd.filename = f.filename JOIN {node} n ON n.nid = f.nid"  . tablesort_sql($header));
 	}
 	else {
-	  $result = db_query("SELECT fd.filename, fd.count, fd.timestamp FROM {file_downloads} fd JOIN {files} f ON fd.filename = f.filename JOIN {node} n ON n.nid = f.nid WHERE n.uid = %d" . tablesort_sql($header), $user->uid);
+	  $result = db_query("SELECT fd.filename, fd.count, fd.timestamp, f.nid, n.type FROM {file_downloads} fd JOIN {files} f ON fd.filename = f.filename JOIN {node} n ON n.nid = f.nid WHERE n.uid = %d" . tablesort_sql($header), $user->uid);
 	}
 	
   while ($file = db_fetch_object($result)) {
@@ -85,14 +138,23 @@ function download_count_view_page() {
     $row[] = $file->filename;
 	$row[] = $file->count;	
 	$row[] = format_interval(time() - $file->timestamp) . ' ago';	
+	$row[] = l(t('view ' . $file->type), 'node/' . $file->nid);
 	$rows[] = $row;	
   }
 
   if (empty($rows)) {
     $rows[] = array(array('data' => t('No file attachment has been downloaded.'), 'colspan' => '3'));
   }
+  
+  $output = check_markup(variable_get('download_counter_view_page_header', ''), 
+                   variable_get('download_counter_view_page_format', 0), 
+				   false);
 
-  $output = theme('table', $header, $rows, array('class' => 'download_count'));
+  $output .= theme('table', $header, $rows, array('class' => 'download_count'));
+  
+  $output .= check_markup(variable_get('download_counter_view_page_footer', ''), 
+                   variable_get('download_counter_view_page_format', 0), 
+				   false);
   
   return $output;
 }
@@ -111,8 +173,7 @@ function download_count_file_download($filename) {
       // If the file is already added, just increment the count, 
       // otherwise add the file with count 1
       if(db_result(db_query("SELECT filename FROM {file_downloads} WHERE filename = '%s'", $filename))) {
-        db_query("UPDATE {file_downloads} SET count = count+1 WHERE filename = '%s'", $filename);
-		db_query("UPDATE {file_downloads} SET timestamp = %d WHERE filename = '%s'", time(), $filename);
+        db_query("UPDATE {file_downloads} SET count = count+1, timestamp = %d  WHERE filename = '%s'", time(), $filename);
       } 
 	  else {
         db_query("INSERT INTO {file_downloads} (filename, count, timestamp) VALUES ('%s', 1,%d)", $filename, time());
@@ -131,8 +192,11 @@ function download_count_nodeapi(&$node, $op, $teaser) {
   switch ($op) {
     case 'view':
       global $user; 
+	  if ($user->uid == 1 && variable_get('do_not_show_download_count_in_node_for_admin', FALSE)) {
+	  	return;
+	  }
       if (!$teaser && count($node->files)) {
-	    if (user_access('view all downloads count in nodes') || (user_access('view own nodes downloads count in nodes') && ($node->uid == $user->uid)) ) {
+	    if (user_access('view all downloads count in nodes') || (user_access('view own nodes downloads count in nodes') && ($node->uid == $user->uid))) {
 		  $node->body = theme('download_count_body', $node);
 		}
 	  }
