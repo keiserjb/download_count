@@ -13,6 +13,13 @@ function download_count_install() {
 		) /*!40100 DEFAULT CHARACTER SET utf8 */");
       break;
     case 'pgsql':
+	  db_query("CREATE TABLE if not exists {file_downloads} (
+        did serial NOT NULL,
+        filename character varying(255) NOT NULL,
+        count integer DEFAULT 0 NOT NULL,
+         \"timestamp\" integer DEFAULT 0 NOT NULL
+        )");
+       db_query("ALTER TABLE ONLY {file_downloads} ADD CONSTRAINT {file_downloads}_pkey PRIMARY KEY (did)");
 	  break;
   }
 }
