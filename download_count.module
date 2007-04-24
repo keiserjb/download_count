@@ -181,9 +181,10 @@ function download_count_view_page() {
  */
 function download_count_file_download($filename) {
 
-  $extensions = explode(' ', trim(variable_get('excluded file extensions', '')));
+  $extensions = explode(' ', trim(variable_get('excluded file extensions', 'jpg jpeg gif png')));
   if (count($extensions)) {
-    if (in_array(substr($filename, strpos($filename, '.') + 1), $extensions)) {
+    $pathinfo = pathinfo($filename);
+    if (in_array($pathinfo['extension'], $extensions)) {
       return;
 	}
   }
