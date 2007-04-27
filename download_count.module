@@ -270,7 +270,8 @@ function theme_download_count_body($node) {
   if (strstr($node->body, '<table id="attachments"')) {
     $start = strpos ($node->body, '<table id="attachments"');
 	$end = strpos ($node->body, '</table>', $start);
-   	return substr_replace($node->body, '', $start, $end - $start + 8) . $attachments;   
+   	// return substr_replace($node->body, '', $start, $end - $start + 8) . $attachments;
+	return substr_replace($node->body, $attachments, $start, $end - $start + 8);   
     }
     else {
     return $node->body . $attachments;   
