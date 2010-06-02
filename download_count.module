@@ -55,7 +55,7 @@ function download_count_menu() {
     'page arguments' => array('my_download_count'),
     'access callback' => 'download_count_access_callback',
     'type' => MENU_NORMAL_ITEM,
-    'file' => 'includes/download_count.pages.inc',
+    'file' => '/includes/download_count.pages.inc',
     );
 
   return $items;
@@ -128,8 +128,7 @@ function download_count_field_formatter_info() {
 function download_count_views_api() {
   return array(
     'api' => 2.0,
-    'path' => drupal_get_path('module', 'download_count') . '/includes',
-
+    'path' => drupal_get_path('module', 'download_count') . '/includes'    
   );
 }
 
@@ -217,10 +216,16 @@ function download_count_block($op='list' , $delta=0, $edit=array()) {
         '#size' => 5,
         '#default_value' => variable_get('download_count_' . $delta . '_block_limit', 10),
         );
+      $form['download_count_' . $delta . '_show_size'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Display aggregated filesize'),
+        '#default_value' => variable_get('download_count_' . $delta . '_show_size', 0),
+        );
       return $form;
 
     case 'save' :
       variable_set('download_count_' . $delta . '_block_limit', $edit['download_count_' . $delta . '_block_limit']);
+      variable_set('download_count_' . $delta . '_show_size', $edit['download_count_' . $delta . '_show_size']);      
       break;
 
       case 'view':
@@ -359,12 +364,13 @@ function _download_count_get_nodes_by_filefield($file) {
 
 function _download_count_block_contents($block) {
   $limit = variable_get('download_count_' . $block . '_block_limit', 10);
+  $show_size = variable_get('download_count_' . $block . '_show_size', 0);  
   switch ($block) {
     case 'files':
       $rows = array();
       $header[] = array('data' => t('Filename'), 'class' => 'filename');
-      $header[] = array('data' => t('Size'), 'class' => 'size');
-      $header[] = array('data' => t('Count'), 'class' => 'count');
+      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
+      $header[] = array('data' => t('count'), 'class' => 'count');
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, MAX(f.filesize) AS size FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', $limit);
@@ -373,7 +379,7 @@ function _download_count_block_contents($block) {
       while ($file = db_fetch_object($result)) {
         $row = array();
         $row[] = check_plain($file->filename);
-        $row[] = format_size($file->size);
+        $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
         $rows[] = $row;
       }
@@ -386,7 +392,7 @@ function _download_count_block_contents($block) {
     case 'downloaders':
       $rows = array();
       $header[] = array('data' => t('Username'), 'class' => 'username');
-      $header[] = array('data' => t('Size'), 'class' => 'size');
+      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
 
       if (user_access('view all download counts')) {
@@ -396,7 +402,7 @@ function _download_count_block_contents($block) {
       while ($file = db_fetch_object($result)) {
         $row = array();
         $row[] = l($file->name, 'user/' . $file->uid);
-        $row[] = format_size($file->size);
+        $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
         $rows[] = $row;
       }
@@ -409,7 +415,7 @@ function _download_count_block_contents($block) {
     case 'users':
       $rows = array();
       $header[] = array('data' => t('Username'), 'class' => 'username');
-      $header[] = array('data' => t('Size'), 'class' => 'size');
+      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
 
       if (user_access('view all download counts')) {
@@ -419,7 +425,7 @@ function _download_count_block_contents($block) {
       while ($file = db_fetch_object($result)) {
         $row = array();
         $row[] = l($file->name, 'user/' . $file->uid);
-        $row[] = format_size($file->size);
+        $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
         $rows[] = $row;
       }
@@ -431,7 +437,8 @@ function _download_count_block_contents($block) {
 
     case 'nodes':
       $rows = array();
-      $header[] = array('data' => t('Page'), 'class' => 'username');
+      $header[] = array('data' => t('Page'), 'class' => 'node');
+      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';      
       $header[] = array('data' => t('Count'), 'class' => 'count');
 
       if (user_access('view all download counts')) {
@@ -441,6 +448,7 @@ function _download_count_block_contents($block) {
       while ($file = db_fetch_object($result)) {
         $row = array();
         $row[] = l($file->title, 'node/' . $file->nid);
+        $show_size ? $row[] = format_size($file->size) : '';        
         $row[] = $file->count;
         $rows[] = $row;
       }
