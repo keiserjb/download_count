@@ -37,7 +37,7 @@ function download_count_menu() {
     'page arguments' => array('download_count_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_LOCAL_TASK,
-    'file' => 'download_count.admin.inc',
+    'file' => 'includes/download_count.admin.inc',
     );
 
   $items['download_count'] = array(
@@ -46,7 +46,7 @@ function download_count_menu() {
     'page arguments' => array('download_count'),
     'access arguments' => array('view all download counts'),
     'type' => MENU_NORMAL_ITEM,
-    'file' => 'download_count.pages.inc',
+    'file' => 'includes/download_count.pages.inc',
     );
 
   $items['my_download_count'] = array(
@@ -55,7 +55,7 @@ function download_count_menu() {
     'page arguments' => array('my_download_count'),
     'access callback' => 'download_count_access_callback',
     'type' => MENU_NORMAL_ITEM,
-    'file' => 'download_count.pages.inc',
+    'file' => 'includes/download_count.pages.inc',
     );
 
   return $items;
@@ -103,11 +103,11 @@ function download_count_theme() {
   return array(
     'download_count_upload_attachments'  => array(
       'arguments' => array('files' => NULL, 'downloads' => NULL),
-      'file' => 'download_count.theme.inc',
+      'file' => 'includes/download_count.theme.inc',
     ),
     'download_count_formatter_download_count' => array(
       'arguments' => array('element' => NULL),
-      'file' => 'download_count.theme.inc',
+      'file' => 'includes/download_count.theme.inc',
   ),
   );
 }
@@ -128,6 +128,8 @@ function download_count_field_formatter_info() {
 function download_count_views_api() {
   return array(
     'api' => 2.0,
+    'path' => drupal_get_path('module', 'download_count') . '/includes',
+
   );
 }
 
