@@ -364,7 +364,7 @@ function _download_count_block_contents($block) {
       $rows = array();
       $header[] = array('data' => t('Filename'), 'class' => 'filename');
       $header[] = array('data' => t('Size'), 'class' => 'size');
-      $header[] = array('data' => t('Downloads'), 'class' => 'downloads');
+      $header[] = array('data' => t('Count'), 'class' => 'count');
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, MAX(f.filesize) AS size FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', $limit);
@@ -387,7 +387,7 @@ function _download_count_block_contents($block) {
       $rows = array();
       $header[] = array('data' => t('Username'), 'class' => 'username');
       $header[] = array('data' => t('Size'), 'class' => 'size');
-      $header[] = array('data' => t('Downloads'), 'class' => 'downloads');
+      $header[] = array('data' => t('Count'), 'class' => 'count');
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid FROM {download_count} dc JOIN {users} u ON dc.uid = u.uid JOIN {files} f on dc.fid = f.fid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
@@ -410,7 +410,7 @@ function _download_count_block_contents($block) {
       $rows = array();
       $header[] = array('data' => t('Username'), 'class' => 'username');
       $header[] = array('data' => t('Size'), 'class' => 'size');
-      $header[] = array('data' => t('Downloads'), 'class' => 'downloads');
+      $header[] = array('data' => t('Count'), 'class' => 'count');
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {users} u ON f.uid = u.uid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
@@ -432,7 +432,7 @@ function _download_count_block_contents($block) {
     case 'nodes':
       $rows = array();
       $header[] = array('data' => t('Page'), 'class' => 'username');
-      $header[] = array('data' => t('Downloads'), 'class' => 'downloads');
+      $header[] = array('data' => t('Count'), 'class' => 'count');
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, n.title, n.nid FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY n.nid ORDER BY count DESC LIMIT %d', $limit);

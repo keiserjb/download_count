@@ -12,10 +12,10 @@ function download_count_view_page($arg = NULL) {
   $header = array();
   drupal_set_title(t(variable_get('download_count_view_page_title', 'Download Count')));
 
-  $header[] = array('data' => t('Downloads'), 'field' => 'count', 'sort' => 'desc');
-  $header[] = array('data' => t('File'), 'field' => 'filename');
-  $header[] = array('data' => t('Page'), 'field' => 'title');
-  $header[] = array('data' => t('Last Download'), 'field' => 'last');
+  $header[] = array('data' => t('Count'), 'field' => 'count', 'sort' => 'desc', 'class' => 'count');
+  $header[] = array('data' => t('File'), 'field' => 'filename', 'class' => 'file');
+  $header[] = array('data' => t('Page'), 'field' => 'title', 'class' => 'page');
+  $header[] = array('data' => t('Last Download'), 'field' => 'last', 'class' => 'date');
 
   if ($arg == 'download_count') {
     $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, n.title, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY dc.nid, f.filename" . tablesort_sql($header));
