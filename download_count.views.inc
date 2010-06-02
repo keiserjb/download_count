@@ -1,0 +1,121 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Provide views data for the download_count.module.
+ */
+function download_count_views_data() {
+
+  //base table info
+  $data['download_count']['table']['group']  = t('Download count');
+  $data['download_count']['table']['base'] = array(
+    'field' => 'dcid',
+    'title' => t('File download'),
+    'help' => t("Download history for files handled by the core upload and contributed filefield modules."),
+  );
+
+  //joins
+  $data['download_count']['table']['join'] = array(
+    'files' => array(
+      'left_field' => 'fid',
+      'field' => 'fid',
+    ),
+    'node' => array(
+      'left_field' => 'nid',
+      'field' => 'nid',
+    ),
+    'node_revisions' => array(
+      'left_field' => 'vid',
+      'field' => 'vid',
+    ),
+    'users' => array(
+      'left_field' => 'uid',
+      'field' => 'uid',
+    ),
+  );
+
+  //fields
+  $data['download_count']['timestamp'] = array(
+    'title' => t('Timestamp'),
+    'help' => t('The date & time the file was downloaded.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+  );
+
+  $data['download_count']['dcid'] = array(
+    'title' => t('Download count id'),
+    'help' => t('The unique id of the download.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  //relationships
+  $data['download_count']['fid'] = array(
+    'title' => t('File'),
+    'help' => t('Relate the download to the file.'),
+    'relationship' => array(
+      'base' => 'files',
+      'base field' => 'fid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('File'),
+    ),
+  );
+
+  $data['download_count']['nid'] = array(
+    'title' => t('Node'),
+    'help' => t('Relate the download to the node to which it was attacahed when downloaded.'),
+    'relationship' => array(
+      'base' => 'node',
+      'base field' => 'nid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Node'),
+    ),
+  );
+
+  $data['download_count']['vid'] = array(
+    'title' => t('Node Revision'),
+    'help' => t('Relate the download to the node revision to which it was attacahed when downloaded.'),
+    'relationship' => array(
+      'base' => 'node_revisions',
+      'base field' => 'vid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Node Revision'),
+    ),
+  );
+
+  $data['download_count']['uid'] = array(
+    'title' => t('User'),
+    'help' => t("Relate the download to the user that downloaded it."),
+    'relationship' => array(
+      'base' => 'users',
+      'base field' => 'uid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('User'),
+    ),
+  );
+
+  return $data;
+}
