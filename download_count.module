@@ -36,7 +36,6 @@ function download_count_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('download_count_admin_settings'),
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK,
     'file' => 'includes/download_count.admin.inc',
     );
 
@@ -53,7 +52,7 @@ function download_count_menu() {
     'title' => 'My Download Count',
     'page callback' => 'download_count_view_page',
     'page arguments' => array('my_download_count'),
-    'access arguments' => array('view own download counts')
+    'access arguments' => array('view own download counts'),
     'type' => MENU_NORMAL_ITEM,
     'file' => '/includes/download_count.pages.inc',
     );
@@ -118,7 +117,7 @@ function download_count_field_formatter_info() {
 function download_count_views_api() {
   return array(
     'api' => 2.0,
-    'path' => drupal_get_path('module', 'download_count') . '/includes'    
+    'path' => drupal_get_path('module', 'download_count') . '/includes'
   );
 }
 
@@ -211,11 +210,17 @@ function download_count_block($op='list' , $delta=0, $edit=array()) {
         '#title' => t('Display aggregated filesize'),
         '#default_value' => variable_get('download_count_' . $delta . '_show_size', 0),
         );
+      $form['download_count_' . $delta . '_show_last'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Display last download datetime'),
+        '#default_value' => variable_get('download_count_' . $delta . '_show_last', 0),
+        );
       return $form;
 
     case 'save' :
       variable_set('download_count_' . $delta . '_block_limit', $edit['download_count_' . $delta . '_block_limit']);
-      variable_set('download_count_' . $delta . '_show_size', $edit['download_count_' . $delta . '_show_size']);      
+      variable_set('download_count_' . $delta . '_show_size', $edit['download_count_' . $delta . '_show_size']);
+      variable_set('download_count_' . $delta . '_show_last', $edit['download_count_' . $delta . '_show_last']);
       break;
 
       case 'view':
@@ -354,16 +359,18 @@ function _download_count_get_nodes_by_filefield($file) {
 
 function _download_count_block_contents($block) {
   $limit = variable_get('download_count_' . $block . '_block_limit', 10);
-  $show_size = variable_get('download_count_' . $block . '_show_size', 0);  
+  $show_size = variable_get('download_count_' . $block . '_show_size', 0);
+  $show_last = variable_get('download_count_' . $block . '_show_last', 0);
   switch ($block) {
     case 'files':
       $rows = array();
       $header[] = array('data' => t('Filename'), 'class' => 'filename');
       $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
-      $header[] = array('data' => t('count'), 'class' => 'count');
+      $header[] = array('data' => t('Count'), 'class' => 'count');
+      $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, MAX(f.filesize) AS size FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, MAX(f.filesize) AS size, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', $limit);
       }
 
       while ($file = db_fetch_object($result)) {
@@ -371,6 +378,7 @@ function _download_count_block_contents($block) {
         $row[] = check_plain($file->filename);
         $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
+        $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
         $rows[] = $row;
       }
 
@@ -384,9 +392,10 @@ function _download_count_block_contents($block) {
       $header[] = array('data' => t('User'), 'class' => 'user');
       $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
+      $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid FROM {download_count} dc JOIN {users} u ON dc.uid = u.uid JOIN {files} f on dc.fid = f.fid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {users} u ON dc.uid = u.uid JOIN {files} f on dc.fid = f.fid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
       }
 
       while ($file = db_fetch_object($result)) {
@@ -394,6 +403,7 @@ function _download_count_block_contents($block) {
         $row[] = l($file->name, 'user/' . $file->uid);
         $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
+        $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
         $rows[] = $row;
       }
 
@@ -407,9 +417,10 @@ function _download_count_block_contents($block) {
       $header[] = array('data' => t('User'), 'class' => 'user');
       $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
+      $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {users} u ON f.uid = u.uid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {users} u ON f.uid = u.uid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
       }
 
       while ($file = db_fetch_object($result)) {
@@ -417,6 +428,7 @@ function _download_count_block_contents($block) {
         $row[] = l($file->name, 'user/' . $file->uid);
         $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
+        $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
         $rows[] = $row;
       }
 
@@ -428,18 +440,20 @@ function _download_count_block_contents($block) {
     case 'nodes':
       $rows = array();
       $header[] = array('data' => t('Page'), 'class' => 'node');
-      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';      
+      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
+      $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, n.title, n.nid FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY n.nid ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, n.title, n.nid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY n.nid ORDER BY count DESC LIMIT %d', $limit);
       }
 
       while ($file = db_fetch_object($result)) {
         $row = array();
         $row[] = l($file->title, 'node/' . $file->nid);
-        $show_size ? $row[] = format_size($file->size) : '';        
+        $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
+        $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
         $rows[] = $row;
       }
 

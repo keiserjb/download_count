@@ -1,5 +1,6 @@
 <?php
 // $Id$
+
 /**
  * @file
  * Installation code for the download_count module.
@@ -80,9 +81,14 @@ function download_count_uninstall() {
   db_query("DELETE FROM {variable} WHERE name = 'download_count_users_show_size'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_nodes_show_size'");
 
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_files_show_last'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_downloaders_show_last'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_users_show_last'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_nodes_show_last'");
+
   db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_footer'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_format'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_header'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_title'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_excluded_file_extensions'");
-}
+} 
