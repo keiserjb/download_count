@@ -15,10 +15,10 @@
 function download_count_admin_settings() {
   switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
     case FILE_DOWNLOADS_PUBLIC:
-      $output = '<p>' . t('You are using public download. Set your download method to private on the File system configuration <a href="@admin-file-system">page</a>, if you wish for Drupal to keep a record of downloaded files.', array('@admin-file-system' => url('admin/settings/file-system'))) . '</p>';
+      $output = '<p>' . t('The site is configured to use the <i>public</i> download method (at <a href="/admin/settings/file-system">admin/settings/file-system</a>). In order for downloads to be counted, you must either use the <i>private</i> download method or protect one or more files directories as described at <a href="http://drupal.org/node/189239">http://drupal.org/node/189239</a> or <a href="http://drupal.org/node/540754">http://drupal.org/node/540754</a>. Only file paths prefixed with the "system" menu item will be counted.') . '</p>';
       break;
     case FILE_DOWNLOADS_PRIVATE:
-      $output = '<p>' . t('You are using the private download method, hence you have the correct setting to allow this module to keep a record of downloaded files.') . '</p>';
+      $output = '<p>' . t('The site is configured to use the <i>private</i> download method at <a href="admin/settings/file-system">admin/settings/file-system</a>.') . '</p>';
       break;
   }
   $form['info on download method'] = array(
