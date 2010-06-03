@@ -391,7 +391,7 @@ function _download_count_block_contents($block) {
 
     case 'downloaders':
       $rows = array();
-      $header[] = array('data' => t('Username'), 'class' => 'username');
+      $header[] = array('data' => t('User'), 'class' => 'user');
       $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
 
@@ -414,7 +414,7 @@ function _download_count_block_contents($block) {
 
     case 'users':
       $rows = array();
-      $header[] = array('data' => t('Username'), 'class' => 'username');
+      $header[] = array('data' => t('User'), 'class' => 'user');
       $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
 
