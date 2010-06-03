@@ -53,22 +53,12 @@ function download_count_menu() {
     'title' => 'My Download Count',
     'page callback' => 'download_count_view_page',
     'page arguments' => array('my_download_count'),
-    'access callback' => 'download_count_access_callback',
+    'access arguments' => array('view own download counts')
     'type' => MENU_NORMAL_ITEM,
     'file' => '/includes/download_count.pages.inc',
     );
 
   return $items;
-}
-
-function download_count_access_callback() {
-  global $user;
-  if ($user->uid != 1 && user_access('view own download counts')) {
-    return TRUE;
-  }
-  else {
-    return FALSE;
-  }
 }
 
 /**
