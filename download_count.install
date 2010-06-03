@@ -40,7 +40,7 @@ function download_count_schema() {
         'default' => 0,
       ),
       'vid' => array(
-        'description' => t('The uid of the user that downloaded the file.'),
+        'description' => t('The vid of the node revision to which the downloaded file was attached when it was downloaded.'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
