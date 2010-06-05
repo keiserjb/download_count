@@ -32,7 +32,7 @@ function download_count_view_page($arg = NULL) {
   while ($file = db_fetch_object($result)) {
     $row = array();
     $row[] = $file->count;
-    $row[] = l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath));
+    $row[] = user_access('view uploaded files') ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
     $row[] = l(t('@title', array('@title' => $file->title)), 'node/' . $file->nid);
     $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last)));
     $rows[] = $row;

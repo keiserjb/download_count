@@ -64,6 +64,7 @@ function download_count_menu() {
  * Implementation of hook_nodeapi().
  */
 function download_count_nodeapi(&$node, $op, $teaser) {
+  $result = array();
   switch ($op) {
     case 'view' :
       if (isset($node->files) && count($node->files) && user_access('view uploaded files') && !$teaser) {
@@ -79,7 +80,9 @@ function download_count_nodeapi(&$node, $op, $teaser) {
           $downloads[$download->filename]['last'] = $download->last;
           $node->files[$download->fid]->downloads = $download->count;
         }
-        $node->content['files']['#value'] = theme('download_count_upload_attachments', $node->files, $downloads);
+        if (isset($downloads)) {
+          $node->content['files']['#value'] = theme('download_count_upload_attachments', $node->files, $downloads);
+        }  
       }
       break;
   }
@@ -257,7 +260,7 @@ function _download_count_get_file_by_upload($filepath) {
   // check if Upload is enabled
   if (!function_exists('upload_perm')) return NULL; // upload not enabled
 
-  $result = db_query("SELECT u.nid, f.filepath, f.fid FROM {upload} u JOIN {files} f ON f.fid = u.fid WHERE f.filepath = '%s'", $filepath);
+  $result = db_query("SELECT u.nid, u.vid, f.filepath, f.fid FROM {upload} u JOIN {files} f ON f.fid = u.fid WHERE f.filepath = '%s'", $filepath);
   return db_fetch_object($result);
 }
 
