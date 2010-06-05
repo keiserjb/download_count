@@ -18,11 +18,11 @@ function download_count_view_page($arg = NULL) {
   $header[] = array('data' => t('Last Download'), 'field' => 'last', 'class' => 'date');
 
   if ($arg == 'download_count') {
-    $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, n.title, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY dc.nid, f.filename" . tablesort_sql($header));
+    $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY dc.nid, f.filename" . tablesort_sql($header));
     $output = '<div id="download_count_page">';
   }
   elseif ($arg == 'my_download_count') {
-    $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, n.title, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid WHERE dc.uid = %d GROUP BY dc.nid, f.filename" . tablesort_sql($header), $user->uid);
+    $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE dc.uid = %d GROUP BY dc.nid, f.filename" . tablesort_sql($header), $user->uid);
     $output = '<div id="my_download_count_page">';
   }
 
@@ -31,15 +31,16 @@ function download_count_view_page($arg = NULL) {
   $nodes = array();
   while ($file = db_fetch_object($result)) {
     $row = array();
+    $node = node_load($file->nid);    
     $row[] = $file->count;
     $row[] = user_access('view uploaded files') ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
-    $row[] = l(t('@title', array('@title' => $file->title)), 'node/' . $file->nid);
+    $row[] = node_access('view', $node) ? l(t('@title', array('@title' => $node->title)), 'node/' . $node->nid) : check_plain($node->title);
     $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last)));
     $rows[] = $row;
 
     $total_downloads += $file->count;
     $files[] = $file->filename;
-    $nodes[] = $file->title;
+    $nodes[] = $node->title;
   }
 
   if (empty($rows)) {

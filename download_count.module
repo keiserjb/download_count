@@ -448,12 +448,13 @@ function _download_count_block_contents($block) {
       $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, n.title, n.nid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY n.nid ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, dc.nid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid GROUP BY dc.nid ORDER BY count DESC LIMIT %d', $limit);
       }
 
       while ($file = db_fetch_object($result)) {
         $row = array();
-        $row[] = l($file->title, 'node/' . $file->nid);
+        $node = node_load($file->nid);        
+        $row[] = node_access('view', $node) ? l(t('@title', array('@title' => $node->title)), 'node/' . $node->nid) : check_plain($node->title);
         $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
         $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
