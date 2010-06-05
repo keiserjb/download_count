@@ -11,6 +11,7 @@ function download_count_view_page($arg = NULL) {
   $rows = array();
   $header = array();
   drupal_set_title(t(variable_get('download_count_view_page_title', 'Download Count')));
+  $limit = (int) variable_get('download_count_view_page_limit', '');  
 
   $header[] = array('data' => t('Count'), 'field' => 'count', 'sort' => 'desc', 'class' => 'count');
   $header[] = array('data' => t('File'), 'field' => 'filename', 'class' => 'file');
@@ -18,11 +19,21 @@ function download_count_view_page($arg = NULL) {
   $header[] = array('data' => t('Last Download'), 'field' => 'last', 'class' => 'date');
 
   if ($arg == 'download_count') {
-    $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY dc.nid, f.filename" . tablesort_sql($header));
+    if (!$limit) {
+      $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY dc.nid, f.filename" . tablesort_sql($header));
+    }
+    else {
+      $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY dc.nid, f.filename" . tablesort_sql($header) . " LIMIT %d", $limit);
+    }
     $output = '<div id="download_count_page">';
   }
   elseif ($arg == 'my_download_count') {
-    $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE dc.uid = %d GROUP BY dc.nid, f.filename" . tablesort_sql($header), $user->uid);
+    if (!$limit) {
+      $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE dc.uid = %d GROUP BY dc.nid, f.filename" . tablesort_sql($header), $user->uid);
+    }
+    else {
+      $result = db_query("SELECT COUNT(dc.dcid) AS count, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE dc.uid = %d GROUP BY dc.nid, f.filename" . tablesort_sql($header) . " LIMIT %d", $user->uid, $limit);
+    }  
     $output = '<div id="my_download_count_page">';
   }
 
