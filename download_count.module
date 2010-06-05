@@ -373,12 +373,12 @@ function _download_count_block_contents($block) {
       $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, f.filepath, MAX(f.filesize) AS size, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, f.filepath, SUM(f.filesize) AS size, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', $limit);
       }
 
       while ($file = db_fetch_object($result)) {
         $row = array();
-        $row[] = l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath));       
+        $row[] = user_access('view uploaded files') ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
         $show_size ? $row[] = format_size($file->size) : '';
         $row[] = $file->count;
         $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
