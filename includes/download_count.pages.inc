@@ -44,7 +44,7 @@ function download_count_view_page($arg = NULL) {
     $row = array();
     $node = node_load($file->nid);    
     $row[] = $file->count;
-    $row[] = user_access('view uploaded files') ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
+    $row[] = (user_access('view uploaded files')||_download_count_is_accessible_by_filefield($file->filepath)) ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
     $row[] = node_access('view', $node) ? l(t('@title', array('@title' => $node->title)), 'node/' . $node->nid) : check_plain($node->title);
     $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last)));
     $rows[] = $row;
