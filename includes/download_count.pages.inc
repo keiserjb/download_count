@@ -11,7 +11,8 @@ function download_count_view_page($arg = NULL) {
   $rows = array();
   $header = array();
   drupal_set_title(t(variable_get('download_count_view_page_title', 'Download Count')));
-  $limit = (int) variable_get('download_count_view_page_limit', '');  
+  $limit = (int) variable_get('download_count_view_page_limit', '');
+  $file_links = variable_get('download_count_file_links', 1);  
 
   $header[] = array('data' => t('Count'), 'field' => 'count', 'sort' => 'desc', 'class' => 'count');
   $header[] = array('data' => t('File'), 'field' => 'filename', 'class' => 'file');
@@ -44,7 +45,7 @@ function download_count_view_page($arg = NULL) {
     $row = array();
     $node = node_load($file->nid);    
     $row[] = $file->count;
-    $row[] = (user_access('view uploaded files')||_download_count_is_accessible_by_filefield($file->filepath)) ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
+    $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
     $row[] = node_access('view', $node) ? l(t('@title', array('@title' => $node->title)), 'node/' . $node->nid) : check_plain($node->title);
     $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last)));
     $rows[] = $row;
