@@ -45,17 +45,17 @@ function download_count_admin_settings() {
   );
   $form['download count page']['download_count_file_links'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Display file names as links based on permissions.'),
+    '#title' => t('Display file names as links (based on permissions).'),
     '#default_value' => variable_get('download_count_file_links', 1),
   );
   $form['download count page']['download_count_view_page_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Number of items to display'),
     '#size' => 10,
-    '#weight' => -1,    
+    '#weight' => -1,
     '#default_value' => variable_get('download_count_view_page_limit', ''),
     '#description' => t('Leave blank for no limit.'),
-  );  
+  );
   $form['download count page']['download_count_view_page_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Title'),

@@ -72,18 +72,20 @@ function download_count_install() {
 function download_count_uninstall() {
   drupal_uninstall_schema('download_count');
   db_query("DELETE FROM {variable} WHERE name = 'download_count_files_block_limit'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_downloaders_block_limit'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_users_block_limit'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_nodes_block_limit'");
-
   db_query("DELETE FROM {variable} WHERE name = 'download_count_files_show_size'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_downloaders_show_size'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_users_show_size'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_nodes_show_size'");
-
   db_query("DELETE FROM {variable} WHERE name = 'download_count_files_show_last'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_files_file_links'");
+
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_downloaders_block_limit'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_downloaders_show_size'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_downloaders_show_last'");
+
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_users_block_limit'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_users_show_size'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_users_show_last'");
+
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_nodes_block_limit'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_nodes_show_size'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_nodes_show_last'");
 
   db_query("DELETE FROM {variable} WHERE name = 'download_count_excluded_file_extensions'");
@@ -93,4 +95,4 @@ function download_count_uninstall() {
   db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_title'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_header'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_footer'");
-} 
+}

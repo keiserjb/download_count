@@ -82,7 +82,7 @@ function download_count_nodeapi(&$node, $op, $teaser) {
         }
         if (isset($downloads)) {
           $node->content['files']['#value'] = theme('download_count_upload_attachments', $node->files, $downloads);
-        }  
+        }
       }
       break;
   }
@@ -218,12 +218,20 @@ function download_count_block($op='list' , $delta=0, $edit=array()) {
         '#title' => t('Display last download datetime'),
         '#default_value' => variable_get('download_count_' . $delta . '_show_last', 0),
         );
+      if ($delta == 'files') {
+        $form['download_count_files_file_links'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Display files names as links (based on permissions).'),
+          '#default_value' => variable_get('download_count_files_file_links', 1),
+          );
+      }
       return $form;
 
     case 'save' :
       variable_set('download_count_' . $delta . '_block_limit', $edit['download_count_' . $delta . '_block_limit']);
       variable_set('download_count_' . $delta . '_show_size', $edit['download_count_' . $delta . '_show_size']);
       variable_set('download_count_' . $delta . '_show_last', $edit['download_count_' . $delta . '_show_last']);
+      $delta == 'files' ? variable_set('download_count_files_file_links', $edit['download_count_files_file_links']) : NULL;
       break;
 
       case 'view':
@@ -364,13 +372,14 @@ function _download_count_block_contents($block) {
   $limit = variable_get('download_count_' . $block . '_block_limit', 10);
   $show_size = variable_get('download_count_' . $block . '_show_size', 0);
   $show_last = variable_get('download_count_' . $block . '_show_last', 0);
+  $block == 'files' ? $file_links = variable_get('download_count_files_file_links', 1) : NULL;
   switch ($block) {
     case 'files':
       $rows = array();
       $header[] = array('data' => t('Filename'), 'class' => 'filename');
-      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
+      $header[] = $show_size ? array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
-      $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
+      $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, f.filepath, SUM(f.filesize) AS size, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', $limit);
@@ -378,10 +387,10 @@ function _download_count_block_contents($block) {
 
       while ($file = db_fetch_object($result)) {
         $row = array();
-        $row[] = user_access('view uploaded files') ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
-        $show_size ? $row[] = format_size($file->size) : '';
+        $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
+        $row[] = $show_size ? format_size($file->size) : '';
         $row[] = $file->count;
-        $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
+        $row[] = $show_last ? t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
         $rows[] = $row;
       }
 
@@ -393,9 +402,9 @@ function _download_count_block_contents($block) {
     case 'downloaders':
       $rows = array();
       $header[] = array('data' => t('User'), 'class' => 'user');
-      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
+      $header[] = $show_size ? array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
-      $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
+      $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {users} u ON dc.uid = u.uid JOIN {files} f on dc.fid = f.fid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
@@ -404,9 +413,9 @@ function _download_count_block_contents($block) {
       while ($file = db_fetch_object($result)) {
         $row = array();
         $row[] = l($file->name, 'user/' . $file->uid);
-        $show_size ? $row[] = format_size($file->size) : '';
+        $row[] = $show_size ? format_size($file->size) : '';
         $row[] = $file->count;
-        $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
+        $row[] = $show_last ? t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
         $rows[] = $row;
       }
 
@@ -418,9 +427,9 @@ function _download_count_block_contents($block) {
     case 'users':
       $rows = array();
       $header[] = array('data' => t('User'), 'class' => 'user');
-      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
+      $header[] = $show_size ? array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
-      $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
+      $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {users} u ON f.uid = u.uid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
@@ -429,9 +438,9 @@ function _download_count_block_contents($block) {
       while ($file = db_fetch_object($result)) {
         $row = array();
         $row[] = l($file->name, 'user/' . $file->uid);
-        $show_size ? $row[] = format_size($file->size) : '';
+        $row[] = $show_size ? format_size($file->size) : '';
         $row[] = $file->count;
-        $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
+        $row[] = $show_last ? t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
         $rows[] = $row;
       }
 
@@ -443,9 +452,9 @@ function _download_count_block_contents($block) {
     case 'nodes':
       $rows = array();
       $header[] = array('data' => t('Page'), 'class' => 'node');
-      $show_size ? $header[] = array('data' => t('Size'), 'class' => 'size') : '';
+      $header[] = $show_size ? array('data' => t('Size'), 'class' => 'size') : '';
       $header[] = array('data' => t('Count'), 'class' => 'count');
-      $show_last ? $header[] = array('data' => t('Last Downloaded'), 'class' => 'last') : '';
+      $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
         $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, dc.nid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid GROUP BY dc.nid ORDER BY count DESC LIMIT %d', $limit);
@@ -453,11 +462,11 @@ function _download_count_block_contents($block) {
 
       while ($file = db_fetch_object($result)) {
         $row = array();
-        $node = node_load($file->nid);        
+        $node = node_load($file->nid);
         $row[] = node_access('view', $node) ? l(t('@title', array('@title' => $node->title)), 'node/' . $node->nid) : check_plain($node->title);
-        $show_size ? $row[] = format_size($file->size) : '';
+        $row[] = $show_size ? format_size($file->size) : '';
         $row[] = $file->count;
-        $show_last ? $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
+        $row[] = $show_last ? t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
         $rows[] = $row;
       }
 
