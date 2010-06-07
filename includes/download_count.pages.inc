@@ -18,7 +18,6 @@ function download_count_view_page($arg = NULL) {
   $header[] = array('data' => t('File'), 'field' => 'filename', 'class' => 'file');
   $header[] = array('data' => t('Page'), 'field' => 'title', 'class' => 'page');
   $header[] = array('data' => t('Last Download'), 'field' => 'last', 'class' => 'date');
-  user_access('administer site configuration') ? $header[] = t('Action ') . l(t('(Reset All)'), 'download_count/all/reset') : NULL;
 
   if ($arg == 'download_count') {
     if (!$limit) {
@@ -61,6 +60,7 @@ function download_count_view_page($arg = NULL) {
     $rows[] = array(array('data' => t('No files have been downloaded.'), 'colspan' => '4'));
   }
 
+  user_access('administer site configuration') && $total_downloads > 0 ? $header[] = t('Action ') . l(t('(Reset All)'), 'download_count/all/reset') : NULL;  
   $output .= check_markup(variable_get('download_count_view_page_header', ''), variable_get('download_count_view_page_format', 0), FALSE);
   $output .= '<p>' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</p>';
   $output .= theme('table', $header, $rows, array('id' => 'download_count_table'));
