@@ -86,9 +86,11 @@ function download_count_uninstall() {
   db_query("DELETE FROM {variable} WHERE name = 'download_count_users_show_last'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_nodes_show_last'");
 
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_footer'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_format'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_header'");
-  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_title'");
   db_query("DELETE FROM {variable} WHERE name = 'download_count_excluded_file_extensions'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_limit'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_file_links'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_format'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_title'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_header'");
+  db_query("DELETE FROM {variable} WHERE name = 'download_count_view_page_footer'");
 } 
