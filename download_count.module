@@ -38,7 +38,14 @@ function download_count_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'includes/download_count.admin.inc',
     );
-
+  $items['download_count/%download_count_entry/reset'] = array(
+    'title' => 'Download Count Reset',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('download_count_reset_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/download_count.pages.inc',
+    );
   $items['download_count'] = array(
     'title' => 'Download Count',
     'page callback' => 'download_count_view_page',
@@ -47,7 +54,6 @@ function download_count_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'includes/download_count.pages.inc',
     );
-
   $items['my_download_count'] = array(
     'title' => 'My Download Count',
     'page callback' => 'download_count_view_page',
@@ -58,6 +64,13 @@ function download_count_menu() {
     );
 
   return $items;
+}
+
+/**
+ * Menu wildcard loader.
+ */
+function download_count_entry_load($dcid) {
+  return $dcid == 'all' ? $dcid : db_fetch_array(db_query('SELECT dc.dcid, f.filename FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE dcid = %d', $dcid));
 }
 
 /**
