@@ -10,6 +10,7 @@ function download_count_view_page($arg = NULL) {
   global $user;
   $rows = array();
   $header = array();
+  $result = NULL;
   drupal_set_title(t(variable_get('download_count_view_page_title', 'Download Count')));
   $limit = (int) variable_get('download_count_view_page_limit', '');
   $file_links = variable_get('download_count_file_links', 1);
@@ -24,7 +25,7 @@ function download_count_view_page($arg = NULL) {
       $result = db_query("SELECT COUNT(dc.dcid) AS count, dc.dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY dc.nid, f.filename" . tablesort_sql($header));
     }
     else {
-      $result = db_query("SELECT COUNT(dc.dcid) AS count, dc,dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY dc.nid, f.filename" . tablesort_sql($header) . " LIMIT %d", $limit);
+      $result = db_query("SELECT COUNT(dc.dcid) AS count, dc.dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY dc.nid, f.filename" . tablesort_sql($header) . " LIMIT %d", $limit);
     }
     $output = '<div id="download_count_page">';
   }
@@ -41,6 +42,7 @@ function download_count_view_page($arg = NULL) {
   $total_downloads = 0;
   $files = array();
   $nodes = array();
+
   while ($file = db_fetch_object($result)) {
     $row = array();
     $node = node_load($file->nid);
@@ -60,7 +62,7 @@ function download_count_view_page($arg = NULL) {
     $rows[] = array(array('data' => t('No files have been downloaded.'), 'colspan' => '4'));
   }
 
-  user_access('administer site configuration') && $total_downloads > 0 ? $header[] = t('Action ') . l(t('(Reset All)'), 'download_count/all/reset') : NULL;  
+  user_access('administer site configuration') && $total_downloads > 0 ? $header[] = t('Action ') . l(t('(Reset All)'), 'download_count/all/reset') : NULL;
   $output .= check_markup(variable_get('download_count_view_page_header', ''), variable_get('download_count_view_page_format', 0), FALSE);
   $output .= '<p>' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</p>';
   $output .= theme('table', $header, $rows, array('id' => 'download_count_table'));
@@ -76,6 +78,8 @@ function download_count_reset_form($form_state, $dc_entry = array()) {
   if ($dc_entry != 'all') {
     $form['dcid'] = array('#type' => 'value', '#value' => $dc_entry['dcid']);
     $form['filename'] = array('#type' => 'value', '#value' => $dc_entry['filename']);
+    $form['fid'] = array('#type' => 'value', '#value' => $dc_entry['fid']);
+    $form['nid'] = array('#type' => 'value', '#value' => $dc_entry['nid']);
     return confirm_form(
       $form,
       t('Are you sure you want to reset the download count for %filename?',
@@ -102,11 +106,25 @@ function download_count_reset_form_submit($form, &$form_state) {
   $result = NULL;
   if ($form['dcid']['#value'] == 'all') {
     $result = db_query('TRUNCATE TABLE {download_count}');
-    $result ? drupal_set_message(t('All download counts have been reset.')) : drupal_set_message(t('Unable to reset all download counts.'), 'error');
+    if ($result) {
+      drupal_set_message(t('All download counts have been reset.'));
+      watchdog('download_count', 'All download counts have been reset.', WATCHDOG_NOTICE);
+    }
+    else {
+      drupal_set_message(t('Unable to reset all download counts.'), 'error');
+      watchdog('download_count', 'Unable to reset all download counts.', WATCHDOG_ERROR);
+    }
   }
   else {
-    $result = db_query('DELETE FROM {download_count} WHERE dcid = %d', $form['dcid']['#value']);
-    $result ? drupal_set_message(t('Download count for %name was reset.', array('%name' => $form['filename']['#value']))) : drupal_set_message(t('Unable to reset download count for %name.', array('%name' => $form['filename']['#value'])), 'error');
+    $result = db_query('DELETE FROM {download_count} WHERE fid = %d AND nid = %d', $form['fid']['#value'], $form['nid']['#value']);
+    if ($result) {
+      drupal_set_message(t('Download count for %name was reset.', array('%name' => $form['filename']['#value'])));
+      watchdog('download_count', 'Download count for %name was reset.', array('%name' => $form['filename']['#value']), WATCHDOG_NOTICE);
+    }
+    else {
+      drupal_set_message(t('Unable to reset download count for %name.', array('%name' => $form['filename']['#value'])), 'error');
+      watchdog('download_count', 'Unable to reset download count for %name.', array('%name' => $form['filename']['#value']), WATCHDOG_ERROR);
+    }
   }
   $form_state['redirect'] = 'download_count';
 }

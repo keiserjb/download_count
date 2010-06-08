@@ -70,7 +70,7 @@ function download_count_menu() {
  * Menu wildcard loader.
  */
 function download_count_entry_load($dcid) {
-  return $dcid == 'all' ? $dcid : db_fetch_array(db_query('SELECT dc.dcid, f.filename FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE dcid = %d', $dcid));
+  return $dcid == 'all' ? $dcid : db_fetch_array(db_query('SELECT dc.dcid, dc.fid, dc.nid, f.filename FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE dcid = %d', $dcid));
 }
 
 /**
@@ -173,7 +173,7 @@ function download_count_file_download($filename) {
 
   // inaccessible file
   if ($accessible_file===FALSE) {
-    watchdog('download', 'Failed to download %file', array('%file' => $filename), WATCHDOG_WARNING);
+    watchdog('download_count', 'Failed to download %file', array('%file' => $filename), WATCHDOG_ERROR);
     return;
   }
 
@@ -196,7 +196,7 @@ function download_count_file_download($filename) {
   }
 
   db_query("INSERT INTO {download_count} (fid, nid, uid, vid, timestamp) VALUES (%d, %d, %d, %d, %d)", $fid, $nid, $user->uid, $vid, time());
-  watchdog('download', '%file was downloaded', array('%file' => $filename), WATCHDOG_NOTICE);
+  watchdog('download_count', '%file was downloaded', array('%file' => $filename), WATCHDOG_NOTICE);
 
 }
 
