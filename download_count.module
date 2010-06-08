@@ -41,7 +41,7 @@ function download_count_menu() {
   $items['download_count/%download_count_entry/reset'] = array(
     'title' => 'Download Count Reset',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('download_count_reset_form'),
+    'page arguments' => array('download_count_reset_form', 1),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_CALLBACK,
     'file' => 'includes/download_count.pages.inc',
