@@ -36,24 +36,6 @@ function download_count_views_data() {
   );
 
   //fields
-  $data['download_count']['timestamp'] = array(
-    'title' => t('Timestamp'),
-    'help' => t('The date & time the file was downloaded.'),
-    'field' => array(
-      'handler' => 'views_handler_field_date',
-      'click sortable' => TRUE,
-    ),
-    'argument' => array(
-      'handler' => 'views_handler_argument_date',
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_date',
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort_date',
-    ),
-  );
-
   $data['download_count']['dcid'] = array(
     'title' => t('Download count id'),
     'help' => t('The unique id of the download.'),
@@ -69,6 +51,54 @@ function download_count_views_data() {
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
+    ),
+  );
+  $data['download_count']['ip_address'] = array(
+    'title' => t('IP address'),
+    'help' => t('IP address of the downloading user.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+  $data['download_count']['referrer'] = array(
+    'title' => t('Referrer'),
+    'help' => t('Referrer URI.'),
+    'field' => array(
+      'handler' => 'views_handler_field_url',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+  $data['download_count']['timestamp'] = array(
+    'title' => t('Timestamp'),
+    'help' => t('The date & time the file was downloaded.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
     ),
   );
 

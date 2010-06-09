@@ -195,7 +195,7 @@ function download_count_file_download($filename) {
     $vid = $node->vid;
   }
 
-  db_query("INSERT INTO {download_count} (fid, nid, uid, vid, timestamp) VALUES (%d, %d, %d, %d, %d)", $fid, $nid, $user->uid, $vid, time());
+  db_query("INSERT INTO {download_count} (fid, nid, uid, vid, ip_address, referrer, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d)", $fid, $nid, $user->uid, $vid, ip_address(), $_SERVER['HTTP_REFERER'], time());
   watchdog('download_count', '%file was downloaded', array('%file' => $filename), WATCHDOG_NOTICE);
 
 }

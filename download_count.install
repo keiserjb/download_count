@@ -46,6 +46,18 @@ function download_count_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'ip_address' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => NULL,
+        'description' => "The ip address of the downloading user.",
+      ),
+      'referrer' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'description' => 'Referrer URI.',
+      ),
       'timestamp' => array(
         'description' => t('The date-time the file was downloaded.'),
         'type' => 'int',
