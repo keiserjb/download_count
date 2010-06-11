@@ -64,9 +64,9 @@ function download_count_view_page($arg = NULL) {
 
   user_access('administer site configuration') && $total_downloads > 0 ? $header[] = t('Action ') . l(t('(Reset All)'), 'download_count/all/reset') : NULL;
   $output .= check_markup(variable_get('download_count_view_page_header', ''), variable_get('download_count_view_page_format', 0), FALSE);
-  $output .= '<p>' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</p>';
+  $output .= '<span id="download_count_summary_top">' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</span>';
   $output .= theme('table', $header, $rows, array('id' => 'download_count_table'));
-  $output .= '<p>' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</p>';
+  $output .= '<span id="download_count_summary_bottom">' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</span>';
   $output .= check_markup(variable_get('download_count_view_page_footer', ''), variable_get('download_count_view_page_format', 0), FALSE);
   $output .= '</div>';
 
