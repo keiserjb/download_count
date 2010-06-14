@@ -21,16 +21,18 @@ function download_count_admin_settings() {
       $output = '<p>' . t('The site is configured to use the <i>private</i> download method at <a href="admin/settings/file-system">admin/settings/file-system</a>.') . '</p>';
       break;
   }
-  $form['info on download method'] = array(
+  $output .= '<p>' . t('Also, don\'t forget to visit the permissions <a href="@page">page</a> to allow roles to view download counts.', array('@page' => url('admin/user/permissions'))) . '</p>';
+
+  $form['help text'] = array(
     '#value' => $output,
   );
-  $form['ignoring a set of file extensions'] = array(
+  $form['excluded file extensions'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Ignoring certain file extensions'),
+    '#title' => t('Excluded file extensions'),
     '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
+    '#collapsed' => TRUE,
   );
-  $form['ignoring a set of file extensions']['download_count_excluded_file_extensions'] = array(
+  $form['excluded file extensions']['download_count_excluded_file_extensions'] = array(
     '#type' => 'textfield',
     '#title' => t('Excluded file extensions'),
     '#default_value' => variable_get('download_count_excluded_file_extensions', 'jpg jpeg gif png'),
@@ -39,9 +41,9 @@ function download_count_admin_settings() {
   );
   $form['download count page'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Download count page'),
+    '#title' => t('Download count page settings'),
     '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
+    '#collapsed' => TRUE,
   );
   $form['download count page']['download_count_file_links'] = array(
     '#type' => 'checkbox',
@@ -67,7 +69,7 @@ function download_count_admin_settings() {
     '#title' => t('Header'),
     '#cols' => 60,
     '#rows' => 6,
-    '#default_value' => variable_get('download_count_view_page_header', t('')),
+    '#default_value' => variable_get('download_count_view_page_header', ''),
     '#description' => t('Text to appear between the title of the page and the download count table.'),
   );
   $form['download count page']['download_count_view_page_footer'] = array(
@@ -75,12 +77,53 @@ function download_count_admin_settings() {
     '#title' => t('Footer'),
     '#cols' => 60,
     '#rows' => 6,
-    '#default_value' => variable_get('download_count_view_page_footer', t('')),
+    '#default_value' => variable_get('download_count_view_page_footer', ''),
     '#description' => t('Text to appear underneath the download count table.'),
   );
   $form['download count page']['download_count_view_page_format'] = filter_form(variable_get('download_count_view_page_format', 2), 0, array('download_count_view_page_format'));
-  $form['info_on_access control'] = array(
-    '#value' => '<p>' . t('Visit the Permissions <a href="@page">page</a> to allow roles to view download count in nodes and on the download count page.', array('@page' => url('admin/user/permissions'))) . '</p>'
+
+  $form['my download count page'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('My download count page settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
+  $form['my download count page']['download_count_mypage_file_links'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display file names as links (based on permissions).'),
+    '#default_value' => variable_get('download_count_mypage_file_links', 1),
+  );
+  $form['my download count page']['download_count_mypage_view_page_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of items to display'),
+    '#size' => 10,
+    '#weight' => -1,
+    '#default_value' => variable_get('download_count_mypage_view_page_limit', ''),
+    '#description' => t('Leave blank for no limit.'),
+  );
+  $form['my download count page']['download_count_mypage_view_page_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#default_value' => variable_get('download_count_mypage_view_page_title', t('My Download Counts')),
+    '#description' => t('Title of this <a href="@page">page</a>.', array('@page' => url('my_download_count'))),
+  );
+  $form['my download count page']['download_count_mypage_view_page_header'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Header'),
+    '#cols' => 60,
+    '#rows' => 6,
+    '#default_value' => variable_get('download_count_mypage_view_page_header', ''),
+    '#description' => t('Text to appear between the title of the page and the download count table.'),
+  );
+  $form['my download count page']['download_count_mypage_view_page_footer'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Footer'),
+    '#cols' => 60,
+    '#rows' => 6,
+    '#default_value' => variable_get('download_count_mypage_view_page_footer', ''),
+    '#description' => t('Text to appear underneath the download count table.'),
+  );
+  $form['my download count page']['download_count_mypage_view_page_format'] = filter_form(variable_get('download_count_mypage_view_page_format', 2), 0, array('download_count_mypage_view_page_format'));
+
   return system_settings_form($form);
 }

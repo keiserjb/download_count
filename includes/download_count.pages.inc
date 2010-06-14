@@ -11,9 +11,6 @@ function download_count_view_page($arg = NULL) {
   $rows = array();
   $header = array();
   $result = NULL;
-  drupal_set_title(t(variable_get('download_count_view_page_title', 'Download Count')));
-  $limit = (int) variable_get('download_count_view_page_limit', '');
-  $file_links = variable_get('download_count_file_links', 1);
 
   $header[] = array('data' => t('Count'), 'field' => 'count', 'sort' => 'desc', 'class' => 'count');
   $header[] = array('data' => t('File'), 'field' => 'filename', 'class' => 'file');
@@ -21,6 +18,10 @@ function download_count_view_page($arg = NULL) {
   $header[] = array('data' => t('Last Download'), 'field' => 'last', 'class' => 'date');
 
   if ($arg == 'download_count') {
+    drupal_set_title(t(variable_get('download_count_view_page_title', 'Download Count')));
+    $limit = (int) variable_get('download_count_view_page_limit', '');
+    $file_links = variable_get('download_count_file_links', 1);
+
     if (!$limit) {
       $result = db_query("SELECT COUNT(dc.dcid) AS count, dc.dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY dc.nid, f.filename" . tablesort_sql($header));
     }
@@ -30,6 +31,10 @@ function download_count_view_page($arg = NULL) {
     $output = '<div id="download_count_page">';
   }
   elseif ($arg == 'my_download_count') {
+    drupal_set_title(t(variable_get('download_count_mypage_view_page_title', 'My Download Counts')));
+    $limit = (int) variable_get('download_count_mypage_view_page_limit', '');
+    $file_links = variable_get('download_count_mypage_file_links', 1);
+
     if (!$limit) {
       $result = db_query("SELECT COUNT(dc.dcid) AS count, dc.dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid WHERE dc.uid = %d GROUP BY dc.nid, f.filename" . tablesort_sql($header), $user->uid);
     }
@@ -63,11 +68,11 @@ function download_count_view_page($arg = NULL) {
   }
 
   user_access('administer site configuration') && $total_downloads > 0 ? $header[] = t('Action ') . l(t('(Reset All)'), 'download_count/all/reset') : NULL;
-  $output .= check_markup(variable_get('download_count_view_page_header', ''), variable_get('download_count_view_page_format', 0), FALSE);
+  $output .= $arg == 'download_count' ? check_markup(variable_get('download_count_view_page_header', ''), variable_get('download_count_view_page_format', 0), FALSE) : check_markup(variable_get('download_count_mypage_view_page_header', ''), variable_get('download_count_mypage_view_page_format', 0), FALSE);
   $output .= '<span id="download_count_summary_top">' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</span>';
   $output .= theme('table', $header, $rows, array('id' => 'download_count_table'));
   $output .= '<span id="download_count_summary_bottom">' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</span>';
-  $output .= check_markup(variable_get('download_count_view_page_footer', ''), variable_get('download_count_view_page_format', 0), FALSE);
+  $output .= $arg == 'download_count' ? check_markup(variable_get('download_count_view_page_footer', ''), variable_get('download_count_view_page_format', 0), FALSE) : check_markup(variable_get('download_count_mypage_view_page_footer', ''), variable_get('download_count_mypage_view_page_format', 0), FALSE);
   $output .= '</div>';
 
   return $output;
