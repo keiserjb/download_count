@@ -52,7 +52,7 @@ function download_count_view_page($arg = NULL) {
     $row = array();
     $node = node_load($file->nid);
     $row[] = $file->count;
-    $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
+    $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), function_exists('_private_upload_create_url') ? _private_upload_create_url($file) : file_create_url($file->filepath)) : $file->filename;
     $row[] = node_access('view', $node) ? l(t('@title', array('@title' => $node->title)), 'node/' . $node->nid) : check_plain($node->title);
     $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last)));
     user_access('administer site configuration') ? $row[] = l(t('Reset'), 'download_count/' . $file->dcid . '/reset') : NULL;
