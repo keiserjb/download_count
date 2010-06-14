@@ -10,7 +10,7 @@ function theme_download_count_upload_attachments($files, $downloads) {
   $rows = array();
   foreach ($files as $file) {
     $file = (object)$file;
-    if ($file->list && empty($file->remove)) {
+    if (isset($file->list) && empty($file->remove)) {
       $href = file_create_url($file->filepath);
       $text = $file->description ? $file->description : $file->filename;
       $last = isset($downloads[$file->filename]['last']) ? t('@time ago', array('@time' => format_interval(time() - $downloads[$file->filename]['last']))) : 'never';

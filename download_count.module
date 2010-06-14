@@ -195,7 +195,7 @@ function download_count_file_download($filename) {
     $vid = $node->vid;
   }
 
-  db_query("INSERT INTO {download_count} (fid, nid, uid, vid, ip_address, referrer, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d)", $fid, $nid, $user->uid, $vid, ip_address(), $_SERVER['HTTP_REFERER'], time());
+  db_query("INSERT INTO {download_count} (fid, nid, uid, vid, ip_address, referrer, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d)", $fid, $nid, $user->uid, $vid, ip_address(), isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : NULL, time());
   watchdog('download_count', '%file was downloaded', array('%file' => $filename), WATCHDOG_NOTICE);
 
 }
@@ -395,12 +395,12 @@ function _download_count_block_contents($block) {
       $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, f.filepath, SUM(f.filesize) AS size, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, f.filepath, SUM(f.filesize) AS size, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', (int) $limit);
       }
 
       while ($file = db_fetch_object($result)) {
         $row = array();
-        $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : $file->filename;
+        $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : check_plain($file->filename);
         $row[] = $show_size ? format_size($file->size) : '';
         $row[] = $file->count;
         $row[] = $show_last ? t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
@@ -420,7 +420,7 @@ function _download_count_block_contents($block) {
       $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {users} u ON dc.uid = u.uid JOIN {files} f on dc.fid = f.fid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {users} u ON dc.uid = u.uid JOIN {files} f on dc.fid = f.fid GROUP BY u.name ORDER BY count DESC LIMIT %d', (int) $limit);
       }
 
       while ($file = db_fetch_object($result)) {
@@ -445,7 +445,7 @@ function _download_count_block_contents($block) {
       $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {users} u ON f.uid = u.uid GROUP BY u.name ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, u.name, u.uid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid JOIN {users} u ON f.uid = u.uid GROUP BY u.name ORDER BY count DESC LIMIT %d', (int) $limit);
       }
 
       while ($file = db_fetch_object($result)) {
@@ -470,7 +470,7 @@ function _download_count_block_contents($block) {
       $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, dc.nid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid GROUP BY dc.nid ORDER BY count DESC LIMIT %d', $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, SUM(f.filesize) AS size, dc.nid, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f on dc.fid = f.fid GROUP BY dc.nid ORDER BY count DESC LIMIT %d', (int) $limit);
       }
 
       while ($file = db_fetch_object($result)) {
