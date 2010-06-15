@@ -400,7 +400,7 @@ function _download_count_block_contents($block) {
 
       while ($file = db_fetch_object($result)) {
         $row = array();
-        $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->filepath)) : check_plain($file->filename);
+        $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), function_exists('_private_upload_create_url') ? _private_upload_create_url($file) : file_create_url($file->filepath)) : check_plain($file->filename);
         $row[] = $show_size ? format_size($file->size) : '';
         $row[] = $file->count;
         $row[] = $show_last ? t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
