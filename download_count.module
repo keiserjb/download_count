@@ -395,7 +395,7 @@ function _download_count_block_contents($block) {
       $header[] = $show_last ? array('data' => t('Last Downloaded'), 'class' => 'last') : '';
 
       if (user_access('view all download counts')) {
-        $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, f.filepath, SUM(f.filesize) AS size, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', (int) $limit);
+        $result = db_query('SELECT COUNT(dc.dcid) AS count, f.filename, f.filepath, f.fid, SUM(f.filesize) AS size, MAX(dc.timestamp) as last FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid GROUP BY f.filename ORDER BY count DESC LIMIT %d', (int) $limit);
       }
 
       while ($file = db_fetch_object($result)) {
