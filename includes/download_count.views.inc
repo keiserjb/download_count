@@ -173,16 +173,16 @@ function download_count_views_data() {
 /**
  * Implementation of hook_views_data_alter().
  *
- * Replaces default views date field formatters with download_count formatter for private files.
+ * Replaces default views file field link formatters with download_count formatter.
  */
-function download_count_views_data_alter(&$cache) {
-  foreach ($cache as $module => $a) {
-    foreach ($a as $column => $b) {
-      foreach ($b as $property => $c) {
-        if ($property == 'field' && !empty($c['handler'])) {
-          switch ($c['handler']) {
+function download_count_views_data_alter(&$data) {
+  foreach ($data as $module => $m) {
+    foreach ($m as $column => $c) {
+      foreach ($c as $property => $p) {
+        if ($property == 'field' && !empty($p['handler'])) {
+          switch ($p['handler']) {
             case 'views_handler_field_file':
-              $cache[$module][$column][$property]['handler'] = 'download_count_views_handler_field_file';
+              $data[$module][$column][$property]['handler'] = 'download_count_views_handler_field_file';
               break;
           }
         }
