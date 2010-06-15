@@ -5,6 +5,26 @@
  * @file
  * Provide views data for the download_count.module.
  */
+
+/**
+ * Implementation of hook_views_handlers().
+ */
+function download_count_views_handlers() {
+  return array(
+    'info' => array(
+      'path' => drupal_get_path('module', 'download_count') .'/includes',
+    ),
+    'handlers' => array(
+      'download_count_views_handler_field_file' => array(
+        'parent' => 'views_handler_field_file',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_views_data().
+ */
 function download_count_views_data() {
 
   //base table info
@@ -102,6 +122,115 @@ function download_count_views_data() {
     ),
   );
 
+  // Bogus fields for aliasing purposes.
+  $data['download_count']['downloaded_fulldate'] = array(
+    'title' => t('Created date'),
+    'help' => t('In the form of CCYYMMDD.'),
+    'argument' => array(
+      'field' => 'created',
+      'handler' => 'views_handler_argument_node_created_fulldate',
+    ),
+  );
+
+  $data['download_count']['downloaded_year_month'] = array(
+    'title' => t('Created year + month'),
+    'help' => t('In the form of YYYYMM.'),
+    'argument' => array(
+      'field' => 'created',
+      'handler' => 'views_handler_argument_node_created_year_month',
+    ),
+  );
+
+  $data['download_count']['downloaded_year'] = array(
+    'title' => t('Created year'),
+    'help' => t('In the form of YYYY.'),
+    'argument' => array(
+      'field' => 'created',
+      'handler' => 'views_handler_argument_node_created_year',
+    ),
+  );
+
+  $data['download_count']['downloaded_month'] = array(
+    'title' => t('Created month'),
+    'help' => t('In the form of MM (01 - 12).'),
+    'argument' => array(
+      'field' => 'created',
+      'handler' => 'views_handler_argument_node_created_month',
+    ),
+  );
+
+  $data['download_count']['downloaded_day'] = array(
+    'title' => t('Created day'),
+    'help' => t('In the form of DD (01 - 31).'),
+    'argument' => array(
+      'field' => 'created',
+      'handler' => 'views_handler_argument_node_created_day',
+    ),
+  );
+
+  $data['download_count']['downloaded_week'] = array(
+    'title' => t('Created week'),
+    'help' => t('In the form of WW (01 - 53).'),
+    'argument' => array(
+      'field' => 'created',
+      'handler' => 'views_handler_argument_node_created_week',
+    ),
+  );
+
+  $data['download_count']['changed_fulldate'] = array(
+    'title' => t('Updated date'),
+    'help' => t('In the form of CCYYMMDD.'),
+    'argument' => array(
+      'field' => 'changed',
+      'handler' => 'views_handler_argument_node_created_fulldate',
+    ),
+  );
+
+  $data['download_count']['changed_year_month'] = array(
+    'title' => t('Updated year + month'),
+    'help' => t('In the form of YYYYMM.'),
+    'argument' => array(
+      'field' => 'changed',
+      'handler' => 'views_handler_argument_node_created_year_month',
+    ),
+  );
+
+  $data['download_count']['changed_year'] = array(
+    'title' => t('Updated year'),
+    'help' => t('In the form of YYYY.'),
+    'argument' => array(
+      'field' => 'changed',
+      'handler' => 'views_handler_argument_node_created_year',
+    ),
+  );
+
+  $data['download_count']['changed_month'] = array(
+    'title' => t('Updated month'),
+    'help' => t('In the form of MM (01 - 12).'),
+    'argument' => array(
+      'field' => 'changed',
+      'handler' => 'views_handler_argument_node_created_month',
+    ),
+  );
+
+  $data['download_count']['changed_day'] = array(
+    'title' => t('Updated day'),
+    'help' => t('In the form of DD (01 - 31).'),
+    'argument' => array(
+      'field' => 'changed',
+      'handler' => 'views_handler_argument_node_created_day',
+    ),
+  );
+
+  $data['download_count']['changed_week'] = array(
+    'title' => t('Updated week'),
+    'help' => t('In the form of WW (01 - 53).'),
+    'argument' => array(
+      'field' => 'changed',
+      'handler' => 'views_handler_argument_node_created_week',
+    ),
+  );
+
   //relationships
   $data['download_count']['fid'] = array(
     'title' => t('File'),
@@ -148,4 +277,25 @@ function download_count_views_data() {
   );
 
   return $data;
+}
+
+/**
+ * Implementation of hook_views_data_alter().
+ *
+ * Replaces default views date field formatters with download_count formatter for private files.
+ */
+function download_count_views_data_alter(&$cache) {
+  foreach ($cache as $module => $a) {
+    foreach ($a as $column => $b) {
+      foreach ($b as $property => $c) {
+        if ($property == 'field' && !empty($c['handler'])) {
+          switch ($c['handler']) {
+            case 'views_handler_field_file':
+              $cache[$module][$column][$property]['handler'] = 'download_count_views_handler_field_file';
+              break;
+          }
+        }
+      }
+    }
+  }
 }
