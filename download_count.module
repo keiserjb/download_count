@@ -147,7 +147,7 @@ function download_count_file_download($filename) {
   $extensions = explode(' ', strtolower(trim(variable_get('download_count_excluded_file_extensions', 'jpg jpeg gif png'))));
   if (count($extensions)) {
     $pathinfo = pathinfo($filename);
-    if (in_array($pathinfo['extension'], $extensions)) {
+    if (in_array(stringtolower($pathinfo['extension']), $extensions)) {
       return;
     }
   }
@@ -382,10 +382,12 @@ function _download_count_get_nodes_by_filefield($file) {
 }
 
 function _download_count_block_contents($block) {
+  $result = '';
   $limit = variable_get('download_count_' . $block . '_block_limit', 10);
   $show_size = variable_get('download_count_' . $block . '_show_size', 0);
   $show_last = variable_get('download_count_' . $block . '_show_last', 0);
   $block == 'files' ? $file_links = variable_get('download_count_files_file_links', 1) : NULL;
+
   switch ($block) {
     case 'files':
       $rows = array();
@@ -476,7 +478,7 @@ function _download_count_block_contents($block) {
       while ($file = db_fetch_object($result)) {
         $row = array();
         $node = node_load($file->nid);
-        $row[] = node_access('view', $node) ? l(t('@title', array('@title' => $node->title)), 'node/' . $node->nid) : check_plain($node->title);
+        $row[] = node_access('view', $node) ? l($node->title, 'node/' . $node->nid) : check_plain($node->title);
         $row[] = $show_size ? format_size($file->size) : '';
         $row[] = $file->count;
         $row[] = $show_last ? t('@time ago', array('@time' => format_interval(time() - $file->last))) : '';
