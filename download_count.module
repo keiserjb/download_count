@@ -147,7 +147,7 @@ function download_count_file_download($filename) {
   $extensions = explode(' ', strtolower(trim(variable_get('download_count_excluded_file_extensions', 'jpg jpeg gif png'))));
   if (count($extensions)) {
     $pathinfo = pathinfo($filename);
-    if (in_array(stringtolower($pathinfo['extension']), $extensions)) {
+    if (in_array(strtolower($pathinfo['extension']), $extensions)) {
       return;
     }
   }
