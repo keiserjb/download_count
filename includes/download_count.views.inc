@@ -7,12 +7,12 @@
  */
 
 /**
- * Implementation of hook_views_handlers().
+ * Implements hook_views_handlers().
  */
 function download_count_views_handlers() {
   return array(
     'info' => array(
-      'path' => drupal_get_path('module', 'download_count') .'/includes',
+      'path' => drupal_get_path('module', 'download_count') . '/includes',
     ),
     'handlers' => array(
       'download_count_views_handler_field_file' => array(
@@ -23,7 +23,7 @@ function download_count_views_handlers() {
 }
 
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function download_count_views_data() {
 
@@ -171,7 +171,7 @@ function download_count_views_data() {
 }
 
 /**
- * Implementation of hook_views_data_alter().
+ * Implements hook_views_data_alter().
  *
  * Replaces default views file field link formatters with download_count formatter.
  */

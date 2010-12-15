@@ -12,10 +12,27 @@ function download_count_view_page($arg = NULL) {
   $header = array();
   $result = NULL;
 
-  $header[] = array('data' => t('Count'), 'field' => 'count', 'sort' => 'desc', 'class' => 'count');
-  $header[] = array('data' => t('File'), 'field' => 'filename', 'class' => 'file');
-  $header[] = array('data' => t('Page'), 'field' => 'title', 'class' => 'page');
-  $header[] = array('data' => t('Last Download'), 'field' => 'last', 'class' => 'date');
+  $header[] = array(
+    'data' => t('Count'),
+    'field' => 'count',
+    'sort' => 'desc',
+    'class' => 'count',
+  );
+  $header[] = array(
+    'data' => t('File'),
+    'field' => 'filename',
+    'class' => 'file',
+  );
+  $header[] = array(
+    'data' => t('Page'),
+    'field' => 'title',
+    'class' => 'page',
+  );
+  $header[] = array(
+    'data' => t('Last Download'),
+    'field' => 'last',
+    'class' => 'date',
+  );
 
   if ($arg == 'download_count') {
     drupal_set_title(t(variable_get('download_count_view_page_title', 'Download Count')));
@@ -23,9 +40,11 @@ function download_count_view_page($arg = NULL) {
     $file_links = variable_get('download_count_file_links', 1);
 
     if (!$limit) {
+      // TODO Please convert this statement to the D7 database API syntax.
       $result = db_query("SELECT COUNT(dc.dcid) AS count, dc.dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, f.fid, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY dc.nid, f.filename" . tablesort_sql($header));
     }
     else {
+      // TODO Please convert this statement to the D7 database API syntax.
       $result = db_query("SELECT COUNT(dc.dcid) AS count, dc.dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, f.fid, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid GROUP BY dc.nid, f.filename" . tablesort_sql($header) . " LIMIT %d", $limit);
     }
     $output = '<div id="download_count_page">';
@@ -36,9 +55,11 @@ function download_count_view_page($arg = NULL) {
     $file_links = variable_get('download_count_mypage_file_links', 1);
 
     if (!$limit) {
+      // TODO Please convert this statement to the D7 database API syntax.
       $result = db_query("SELECT COUNT(dc.dcid) AS count, dc.dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, f.fid, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid WHERE dc.uid = %d GROUP BY dc.nid, f.filename" . tablesort_sql($header), $user->uid);
     }
     else {
+      // TODO Please convert this statement to the D7 database API syntax.
       $result = db_query("SELECT COUNT(dc.dcid) AS count, dc.dcid, f.filename, MAX(dc.timestamp) AS last, dc.nid, f.filepath, f.fid, n.title FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid JOIN {node} n ON dc.nid = n.nid WHERE dc.uid = %d GROUP BY dc.nid, f.filename" . tablesort_sql($header) . " LIMIT %d", $user->uid, $limit);
     }
     $output = '<div id="my_download_count_page">';
@@ -54,7 +75,7 @@ function download_count_view_page($arg = NULL) {
     $row[] = $file->count;
     $row[] = ($file_links && (user_access('view uploaded files') || _download_count_is_accessible_by_filefield($file->filepath))) ? l(t('@filename', array('@filename' => $file->filename)), function_exists('_private_upload_create_url') ? _private_upload_create_url($file) : file_create_url($file->filepath)) : $file->filename;
     $row[] = node_access('view', $node) ? l(t('@title', array('@title' => $node->title)), 'node/' . $node->nid) : check_plain($node->title);
-    $row[] = t('@time ago', array('@time' => format_interval(time() - $file->last)));
+    $row[] = t('@time ago', array('@time' => format_interval(REQUEST_TIME - $file->last)));
     user_access('administer site configuration') ? $row[] = l(t('Reset'), 'download_count/' . $file->dcid . '/reset') : NULL;
     $rows[] = $row;
 
@@ -64,27 +85,46 @@ function download_count_view_page($arg = NULL) {
   }
 
   if (empty($rows)) {
-    $rows[] = array(array('data' => t('No files have been downloaded.'), 'colspan' => '4'));
+    $rows[] = array(array(
+        'data' => t('No files have been downloaded.'),
+        'colspan' => '4',
+      ));
   }
 
   user_access('administer site configuration') && $total_downloads > 0 ? $header[] = t('Action ') . l(t('(Reset All)'), 'download_count/all/reset') : NULL;
-  $output .= $arg == 'download_count' ? check_markup(variable_get('download_count_view_page_header', ''), variable_get('download_count_view_page_format', 0), FALSE) : check_markup(variable_get('download_count_mypage_view_page_header', ''), variable_get('download_count_mypage_view_page_format', 0), FALSE);
+  $output .= $arg == 'download_count' ? check_markup(variable_get('download_count_view_page_header', ''), variable_get('download_count_view_page_format', 0), $langcode = '' /* TODO Set this variable. */, FALSE) : check_markup(variable_get('download_count_mypage_view_page_header', ''), variable_get('download_count_mypage_view_page_format', 0), $langcode = '' /* TODO Set this variable. */, FALSE);
   $output .= '<span id="download_count_summary_top">' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</span>';
-  $output .= theme('table', $header, $rows, array('id' => 'download_count_table'));
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'download_count_table')));
   $output .= '<span id="download_count_summary_bottom">' . t('Unique Pages: ') . count(array_unique($nodes)) . (', Unique Files: ') . count(array_unique($files)) . ', Total Downloads: ' . $total_downloads . '</span>';
-  $output .= $arg == 'download_count' ? check_markup(variable_get('download_count_view_page_footer', ''), variable_get('download_count_view_page_format', 0), FALSE) : check_markup(variable_get('download_count_mypage_view_page_footer', ''), variable_get('download_count_mypage_view_page_format', 0), FALSE);
+  $output .= $arg == 'download_count' ? check_markup(variable_get('download_count_view_page_footer', ''), variable_get('download_count_view_page_format', 0), $langcode = '' /* TODO Set this variable. */, FALSE) : check_markup(variable_get('download_count_mypage_view_page_footer', ''), variable_get('download_count_mypage_view_page_format', 0), $langcode = '' /* TODO Set this variable. */, FALSE);
   $output .= '</div>';
 
   return $output;
 }
 
-function download_count_reset_form($form_state, $dc_entry = array()) {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function download_count_reset_form($form, $form_state, $dc_entry = array()) {
   $form = array();
   if ($dc_entry != 'all') {
-    $form['dcid'] = array('#type' => 'value', '#value' => $dc_entry['dcid']);
-    $form['filename'] = array('#type' => 'value', '#value' => $dc_entry['filename']);
-    $form['fid'] = array('#type' => 'value', '#value' => $dc_entry['fid']);
-    $form['nid'] = array('#type' => 'value', '#value' => $dc_entry['nid']);
+    $form['dcid'] = array(
+      '#type' => 'value',
+      '#value' => $dc_entry['dcid'],
+    );
+    $form['filename'] = array(
+      '#type' => 'value',
+      '#value' => $dc_entry['filename'],
+    );
+    $form['fid'] = array(
+      '#type' => 'value',
+      '#value' => $dc_entry['fid'],
+    );
+    $form['nid'] = array(
+      '#type' => 'value',
+      '#value' => $dc_entry['nid'],
+    );
     return confirm_form(
       $form,
       t('Are you sure you want to reset the download count for %filename?',
@@ -92,21 +132,28 @@ function download_count_reset_form($form_state, $dc_entry = array()) {
       ),
       'download_count',
       t('This action cannot be undone.'),
-      t('Reset'),  t('Cancel')
+      t('Reset'),   t('Cancel')
     );
   }
   else {
-    $form['dcid'] = array('#type' => 'value', '#value' => 'all');
+    $form['dcid'] = array(
+      '#type' => 'value',
+      '#value' => 'all',
+    );
     return confirm_form(
       $form,
       t('Are you sure you want to reset all download counts?'),
       'download_count',
       t('This action cannot be undone.'),
-      t('Reset All'),  t('Cancel')
+      t('Reset All'),   t('Cancel')
     );
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function download_count_reset_form_submit($form, &$form_state) {
   $result = NULL;
   if ($form['dcid']['#value'] == 'all') {
@@ -121,7 +168,12 @@ function download_count_reset_form_submit($form, &$form_state) {
     }
   }
   else {
-    $result = db_query('DELETE FROM {download_count} WHERE fid = %d AND nid = %d', $form['fid']['#value'], $form['nid']['#value']);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query('DELETE FROM {download_count} WHERE fid = %d AND nid = %d', $form['fid']['#value'], $form['nid']['#value']) */
+    $result = db_delete('download_count')
+  ->condition('fid', $form['fid']['#value'])
+  ->condition('nid', $form['nid']['#value'])
+  ->execute();
     if ($result) {
       drupal_set_message(t('Download count for %name was reset.', array('%name' => $form['filename']['#value'])));
       watchdog('download_count', 'Download count for %name was reset.', array('%name' => $form['filename']['#value']), WATCHDOG_NOTICE);

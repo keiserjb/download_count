@@ -7,11 +7,11 @@
  */
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function download_count_schema() {
   $schema['download_count'] = array(
-    'description' => t('TODO'),
+    'description' => 'TODO',
     'fields' => array(
       'dcid' => array(
         'description' => 'Primary Key: Unique download count id.',
@@ -19,28 +19,28 @@ function download_count_schema() {
         'not null' => TRUE,
       ),
       'fid' => array(
-        'description' => t('The id from the drupal files table of the file downloaded.'),
+        'description' => 'The id from the drupal files table of the file downloaded.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
       'nid' => array(
-        'description' => t('The nid of the node to which the downloaded file was attached when it was downloaded.'),
+        'description' => 'The nid of the node to which the downloaded file was attached when it was downloaded.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
       'uid' => array(
-        'description' => t('The uid of the user that downloaded the file.'),
+        'description' => 'The uid of the user that downloaded the file.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
       'vid' => array(
-        'description' => t('The vid of the node revision to which the downloaded file was attached when it was downloaded.'),
+        'description' => 'The vid of the node revision to which the downloaded file was attached when it was downloaded.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -59,7 +59,7 @@ function download_count_schema() {
         'description' => 'Referrer URI.',
       ),
       'timestamp' => array(
-        'description' => t('The date-time the file was downloaded.'),
+        'description' => 'The date-time the file was downloaded.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -72,16 +72,22 @@ function download_count_schema() {
 }
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function download_count_install() {
-  drupal_install_schema('download_count');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_install_schema('download_count')
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function download_count_uninstall() {
-  drupal_uninstall_schema('download_count');
-  db_query("DELETE FROM {variable} WHERE name LIKE 'download_count_%'");
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_uninstall_schema('download_count')
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query("DELETE FROM {variable} WHERE name LIKE 'download_count_%'") */
+  db_delete('variable')
+  ->condition('name', 'download_count_%', 'LIKE')
+  ->execute();
 }

@@ -1,4 +1,12 @@
 ; $Id$
 name = Download Count
 description = Tracks file downloads for files stored in the drupal files table.
-core = 6.x
+core = 7.x
+
+files[] = download_count.install
+files[] = download_count.module
+files[] = includes/download_count.admin.inc
+files[] = includes/download_count.pages.inc
+files[] = includes/download_count.theme.inc
+files[] = includes/download_count.views.inc
+files[] = includes/download_count_views_handler_field_file.inc
