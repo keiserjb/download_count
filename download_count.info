@@ -1,4 +1,3 @@
-; $Id$
 name = Download Count
 description = Tracks file downloads for files stored in the drupal files table.
 core = 7.x
