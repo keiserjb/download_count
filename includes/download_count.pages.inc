@@ -67,6 +67,7 @@ function download_count_view_page($arg = NULL) {
   $total_downloads = 0;
   $files = array();
   $nodes = array();
+  $colspan = 0;
 
   while ($file = db_fetch_object($result)) {
     $row = array();
