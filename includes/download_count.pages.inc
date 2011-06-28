@@ -34,7 +34,7 @@ function download_count_view_page($arg = NULL) {
   );
 
   if ($arg == 'download_count') {
-    drupal_set_title(t(variable_get('download_count_view_page_title', 'Download Count')));
+    drupal_set_title(check_plain(variable_get('download_count_view_page_title', t('Download Count'))));
     $limit = (int) variable_get('download_count_view_page_limit', '');
     $file_links = variable_get('download_count_file_links', 1);
 
@@ -49,7 +49,7 @@ function download_count_view_page($arg = NULL) {
     $output = '<div id="download_count_page">';
   }
   elseif ($arg == 'my_download_count') {
-    drupal_set_title(t(variable_get('download_count_mypage_view_page_title', 'My Download Counts')));
+    drupal_set_title(check_plain(variable_get('download_count_mypage_view_page_title', t('My Download Counts'))));
     $limit = (int) variable_get('download_count_mypage_view_page_limit', '');
     $file_links = variable_get('download_count_mypage_file_links', 1);
 
