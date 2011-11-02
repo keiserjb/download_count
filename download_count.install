@@ -10,52 +10,52 @@
  */
 function download_count_schema() {
   $schema['download_count'] = array(
-    'description' => 'TODO',
     'fields' => array(
       'dcid' => array(
         'description' => 'Primary Key: Unique download count id.',
         'type' => 'serial',
+        'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'fid' => array(
-        'description' => 'The id from the drupal files table of the file downloaded.',
+        'description' => 'The id from the drupal file_managed table of the file downloaded.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0,
-      ),
-      'nid' => array(
-        'description' => 'The nid of the node to which the downloaded file was attached when it was downloaded.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
       ),
       'uid' => array(
         'description' => 'The uid of the user that downloaded the file.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0,
       ),
-      'vid' => array(
-        'description' => 'The vid of the node revision to which the downloaded file was attached when it was downloaded.',
+      'type' => array(
+        'description' => 'The name of the entity type to which the file was attached when downloaded.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'id' => array(
+        'description' => 'The primary key of the entity to which the file was attached when downloaded.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
       'ip_address' => array(
+        'description' => "The ip address of the downloading user.",
         'type' => 'varchar',
         'length' => 128,
         'not null' => TRUE,
-        'default' => NULL,
-        'description' => "The ip address of the downloading user.",
+        'default' => 0,
       ),
       'referrer' => array(
-        'type' => 'text',
-        'not null' => TRUE,
         'description' => 'Referrer URI.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
       ),
       'timestamp' => array(
         'description' => 'The date-time the file was downloaded.',
@@ -71,22 +71,13 @@ function download_count_schema() {
 }
 
 /**
- * Implements hook_install().
- */
-function download_count_install() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_install_schema('download_count')
-}
-
-/**
  * Implements hook_uninstall().
  */
 function download_count_uninstall() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_uninstall_schema('download_count')
-  // TODO Please review the conversion of this statement to the D7 database API syntax.
-  /* db_query("DELETE FROM {variable} WHERE name LIKE 'download_count_%'") */
-  db_delete('variable')
-  ->condition('name', 'download_count_%', 'LIKE')
-  ->execute();
+  variable_del('download_count_excluded_file_extensions');
+  variable_del('download_count_view_page_limit');
+  variable_del('download_count_view_page_title');
+  variable_del('download_count_view_page_header');
+  variable_del('download_count_view_page_footer');
+  variable_del('download_count_export_range');
 }
