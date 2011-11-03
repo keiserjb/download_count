@@ -19,56 +19,66 @@ function download_count_view_page($arg = NULL) {
   $files = array();
   $colspan = 0;
   $limit = (int) variable_get('download_count_view_page_limit', 0);
+  $items_per_page = (int) variable_get('download_count_view_page_items', 0);
   $page_header = variable_get('download_count_view_page_header', '');
   $page_footer = variable_get('download_count_view_page_footer', '');
   $output = '<div id="download-count-page">';
 
   $header[] = array(
     'data' => t('Count'),
+    'field' => t('count'),
+    'sort' => t('desc'),
   );
   $header[] = array(
     'data' => t('Entity Type'),
+    'field' => t('type'),
   );
   $header[] = array(
     'data' => t('Bundle Type'),
+    'field' => t('bundle'),
   );
   $header[] = array(
     'data' => t('Entity ID'),
+    'field' => t('id'),
   );
   $header[] = array(
     'data' => t('File name'),
+    'field' => t('filename'),
   );
   $header[] = array(
     'data' => t('Size'),
+    'field' => t('filesize'),
   );
   $header[] = array(
     'data' => t('Last Downloaded'),
+    'field' => t('last'),
   );
 
+  $query = db_select('download_count', 'dc')
+    ->fields('dc', array('dcid', 'type', 'bundle','id'))
+    ->fields('f', array('filename', 'fid', 'filesize', 'uri'))
+    ->groupBy('dc.type')
+    ->groupBy('dc.id')
+    ->groupBy('f.filename');
   if ($limit > 0) {
-    $query = db_select('download_count', 'dc')
-      ->fields('dc', array('dcid', 'type', 'bundle','id'))
-      ->fields('f', array('filename', 'fid', 'filesize', 'uri'))
-      ->groupBy('dc.type')
-      ->groupBy('dc.id')
-      ->groupBy('f.filename')
-      ->range(0, $limit);
-    $query->addExpression('COUNT(dc.dcid)', 'count');
-    $query->addExpression('MAX(dc.timestamp)', 'last');
-    $query->join('file_managed', 'f', 'dc.fid = f.fid');
-    $result = $query->execute();
+    $query->range(0, $limit);
   }
-  else {
-    $result = db_query('SELECT COUNT(dc.dcid) AS count, dc.dcid, dc.type, dc.bundle, dc.id, f.filename, MAX(dc.timestamp) AS last, f.fid, f.filesize, f.uri FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.type, dc.id, f.filename');
+  $query->addExpression('COUNT(dc.dcid)', 'count');
+  $query->addExpression('MAX(dc.timestamp)', 'last');
+  $query->join('file_managed', 'f', 'dc.fid = f.fid');
+  if ($items_per_page > 0) {
+    $query = $query->extend('PagerDefault')->limit($items_per_page);
   }
+  $query = $query->extend('TableSort')->orderByHeader($header);
 
+  $result = $query->execute();
   foreach ($result as $file) {
     $row = array();
     $row[] = $file->count;
     $row[] = $file->type;
     $row[] = $file->bundle;
     $row[] = $file->id;
-    $row[] = l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->uri));
+    $row[] = $file->filename;
     $row[] = format_size($file->filesize);
     $row[] = t('@time ago', array('@time' => format_interval(REQUEST_TIME - $file->last)));
     $row[] = l(t('Details'), 'admin/reports/download-count/' . $file->dcid . '/details');
@@ -90,9 +100,12 @@ function download_count_view_page($arg = NULL) {
 
   if ($colspan > 1) {
     $header[] = array(
-      'data' => t('Action(s)') . '&nbsp;'
-        . (user_access('export download counts') ? l(t('(Export All)'), 'admin/reports/download-count/all/export') : NULL)
-        . (user_access('administer site configuration') ? l(t('(Reset All)'), 'admin/reports/download-count/all/reset') : NULL),
+      'data' => t('Action(s)')
+        . (user_access('export download counts') || user_access('administer site configuration') ? '&nbsp;&nbsp;[' : NULL)
+        . (user_access('export download counts') ? l(t('Export All'), 'admin/reports/download-count/all/export') : NULL)
+        . (user_access('export download counts') && user_access('administer site configuration') ? ' / ' : NULL)
+        . (user_access('administer site configuration') ? l(t('Reset All'), 'admin/reports/download-count/all/reset') : NULL)
+        . (user_access('export download counts') || user_access('administer site configuration') ? ']' : NULL),
       'colspan' => $colspan,
     );
     drupal_add_css(drupal_get_path('module', 'download_count') . '/download_count.css');
@@ -102,8 +115,11 @@ function download_count_view_page($arg = NULL) {
   $output .= '<div id="download-count-summary-top">' . t('Unique Files:') . ' ' . count(array_unique($files)) . ', ' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'download-count-table')));
   $output .= '<div id="download-count-summary-bottom">' . t('Unique Files:') . ' ' . count(array_unique($files)) . ', ' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
+  if ($items_per_page > 0) {
+    $output .= theme('pager',array('tags' => array()));
+  }
   $output .= check_markup($page_footer['value'], $page_footer['format']);
-  
+
   $output .= '</div>';
   return $output;
 }

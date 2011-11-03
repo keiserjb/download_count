@@ -33,13 +33,21 @@ function download_count_admin_settings($form, &$form_state) {
   );
   $form['download count page']['download_count_view_page_limit'] = array(
     '#type' => 'textfield',
-    '#title' => t('Number of items to display'),
+    '#title' => t('Total number of items to display'),
     '#size' => 10,
     '#weight' => -1,
     '#default_value' => variable_get('download_count_view_page_limit', 0),
     '#description' => t('Set to 0 for no limit.'),
   );
-  $form['download count page']['download_count_view_page_title'] = array(
+  $form['download count page']['download_count_view_page_items'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of items per page.'),
+    '#size' => 10,
+    '#weight' => -1,
+    '#default_value' => variable_get('download_count_view_page_items', 0),
+    '#description' => t('Set to 0 for no pager.'),
+  );
+   $form['download count page']['download_count_view_page_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Title'),
     '#default_value' => variable_get('download_count_view_page_title', t('Download Count')),

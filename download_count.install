@@ -83,6 +83,7 @@ function download_count_schema() {
 function download_count_uninstall() {
   variable_del('download_count_excluded_file_extensions');
   variable_del('download_count_view_page_limit');
+  variable_del('download_count_view_page_items');
   variable_del('download_count_view_page_title');
   variable_del('download_count_view_page_header');
   variable_del('download_count_view_page_footer');
