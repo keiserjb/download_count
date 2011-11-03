@@ -36,6 +36,13 @@ function download_count_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'bundle' => array(
+        'description' => 'The bundle type of the entity to which the file was attached when downloaded.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
       'id' => array(
         'description' => 'The primary key of the entity to which the file was attached when downloaded.',
         'type' => 'int',

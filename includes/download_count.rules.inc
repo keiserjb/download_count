@@ -20,6 +20,10 @@ function download_count_rules_event_info() {
           'type' => 'file',
           'label' => t('Entity type of the entity from which the file was downloaded.'),
         ),
+        'bundle' => array(
+          'type' => 'file',
+          'label' => t('Bundle type of the entity from which the file was downloaded.'),
+        ),
         'id' => array(
           'type' => 'file',
           'label' => t('ID of the entity from which the file was downloaded.'),

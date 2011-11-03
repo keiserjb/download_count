@@ -30,6 +30,9 @@ function download_count_view_page($arg = NULL) {
     'data' => t('Entity Type'),
   );
   $header[] = array(
+    'data' => t('Bundle Type'),
+  );
+  $header[] = array(
     'data' => t('Entity ID'),
   );
   $header[] = array(
@@ -43,16 +46,17 @@ function download_count_view_page($arg = NULL) {
   );
 
   if ($limit > 0) {
-    $result = db_query('SELECT COUNT(dc.dcid) AS count, dc.dcid, dc.type, dc.id, f.filename, MAX(dc.timestamp) AS last, f.fid, f.filesize, f.uri FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.type, dc.id, f.filename'); //LIMIT :limit', array(':limit' => $limit));
+    $result = db_query('SELECT COUNT(dc.dcid) AS count, dc.dcid, dc.type, dc.bundle, dc.id, f.filename, MAX(dc.timestamp) AS last, f.fid, f.filesize, f.uri FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.id, f.filename'); //LIMIT :limit', array(':limit' => $limit));
   }
   else {
-    $result = db_query('SELECT COUNT(dc.dcid) AS count, dc.dcid, dc.type, dc.id, f.filename, MAX(dc.timestamp) AS last, f.fid, f.filesize, f.uri FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.type, dc.id, f.filename');
+    $result = db_query('SELECT COUNT(dc.dcid) AS count, dc.dcid, dc.type, dc.bundle, dc.id, f.filename, MAX(dc.timestamp) AS last, f.fid, f.filesize, f.uri FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.id, f.filename');
   }
 
   foreach ($result as $file) {
     $row = array();
     $row[] = $file->count;
     $row[] = $file->type;
+    $row[] = $file->bundle;
     $row[] = $file->id;
     $row[] = l(t('@filename', array('@filename' => $file->filename)), file_create_url($file->uri));
     $row[] = format_size($file->filesize);
@@ -116,6 +120,10 @@ function download_count_reset_form($form, $form_state, $dc_entry = NULL) {
       '#type' => 'value',
       '#value' => $dc_entry->type,
     );
+    $form['bundle'] = array(
+      '#type' => 'value',
+      '#value' => $dc_entry->bundle,
+    );
     $form['id'] = array(
       '#type' => 'value',
       '#value' => $dc_entry->id,
@@ -165,7 +173,6 @@ function download_count_reset_form_submit($form, &$form_state) {
   else {
     $result = db_delete('download_count')
       ->condition('fid', $form['fid']['#value'])
-      ->condition('type', $form['type']['#value'])
       ->condition('id', $form['id']['#value'])
       ->execute();
     if ($result) {

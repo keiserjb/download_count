@@ -49,16 +49,16 @@ function download_count_admin_settings($form, &$form_state) {
   $form['download count page']['download_count_view_page_header'] = array(
     '#type' => 'text_format',
     '#title' => t('Header'),
-    '#format' => $header['format'],
-    '#default_value' => $header['value'],
+    '#format' => isset($header['format']) ? $header['format'] : NULL,
+    '#default_value' => isset($header['value']) ? $header['value'] : NULL,
     '#description' => t('Text to appear between the title of the page and the download count table.'),
   );
   $footer = variable_get('download_count_view_page_footer', '');
   $form['download count page']['download_count_view_page_footer'] = array(
     '#type' => 'text_format',
     '#title' => t('Footer'),
-    '#format' => $footer['format'],
-    '#default_value' => $footer['value'],
+    '#format' => isset($footer['format']) ? $footer['format'] : NULL,
+    '#default_value' => isset($footer['value']) ? $footer['value'] : NULL,
     '#description' => t('Text to appear underneath the download count table.'),
   );
 

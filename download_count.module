@@ -89,7 +89,7 @@ function download_count_menu() {
  * Menu wildcard loader.
  */
 function download_count_entry_load($dcid) {
-  return $dcid == 'all' ? $dcid : db_query('SELECT dc.dcid, dc.fid, dc.uid, dc.type, dc.id, dc.ip_address, dc.referrer, dc.timestamp, f.filename, f.uri, f.filemime, f.filesize FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid WHERE dcid = :dcid', array(':dcid' => $dcid))->fetchObject();
+  return $dcid == 'all' ? $dcid : db_query('SELECT dc.dcid, dc.fid, dc.uid, dc.type, dc.bundle, dc.id, dc.ip_address, dc.referrer, dc.timestamp, f.filename, f.uri, f.filemime, f.filesize FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid WHERE dcid = :dcid', array(':dcid' => $dcid))->fetchObject();
 }
 
 /**
@@ -117,12 +117,14 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
   $entity_info = entity_get_info($entity_type);
   $ip = ip_address();
   $referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : NULL;
+  $bundle = isset($entity_info['bundle keys']) ? $entity->$entity_info['bundle keys']['bundle'] : '';
 
   $id = db_insert('download_count')
   ->fields(array(
     'fid' => $file['fid'],
     'uid' => $user->uid,
     'type' => $entity_type,
+    'bundle' => $bundle,
     'id' => $entity->$entity_info['entity keys']['id'],
     'ip_address' => $ip,
     'referrer' => $referrer,
@@ -132,6 +134,6 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
   watchdog('download_count', '%file was downloaded by user #%uid from %ip', array('%file' => $file['filename'], '%uid' => $user->uid, '%ip' => $ip), WATCHDOG_NOTICE);
 
   if (module_exists('rules')) {
-    rules_invoke_event('download_count_file_download', $file['filename'], $user, $entity_type, $entity->$entity_info['entity keys']['id'], $ip, $referrer, $time);
+    rules_invoke_event('download_count_file_download', $file['filename'], $user, $entity_type, $bundle, $entity->$entity_info['entity keys']['id'], $ip, $referrer, $time);
   }
 }
