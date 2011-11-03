@@ -46,10 +46,20 @@ function download_count_view_page($arg = NULL) {
   );
 
   if ($limit > 0) {
-    $result = db_query('SELECT COUNT(dc.dcid) AS count, dc.dcid, dc.type, dc.bundle, dc.id, f.filename, MAX(dc.timestamp) AS last, f.fid, f.filesize, f.uri FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.id, f.filename'); //LIMIT :limit', array(':limit' => $limit));
+    $query = db_select('download_count', 'dc')
+      ->fields('dc', array('dcid', 'type', 'bundle','id'))
+      ->fields('f', array('filename', 'fid', 'filesize', 'uri'))
+      ->groupBy('dc.type')
+      ->groupBy('dc.id')
+      ->groupBy('f.filename')
+      ->range(0, $limit);
+    $query->addExpression('COUNT(dc.dcid)', 'count');
+    $query->addExpression('MAX(dc.timestamp)', 'last');
+    $query->join('file_managed', 'f', 'dc.fid = f.fid');
+    $result = $query->execute();
   }
   else {
-    $result = db_query('SELECT COUNT(dc.dcid) AS count, dc.dcid, dc.type, dc.bundle, dc.id, f.filename, MAX(dc.timestamp) AS last, f.fid, f.filesize, f.uri FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.id, f.filename');
+    $result = db_query('SELECT COUNT(dc.dcid) AS count, dc.dcid, dc.type, dc.bundle, dc.id, f.filename, MAX(dc.timestamp) AS last, f.fid, f.filesize, f.uri FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.type, dc.id, f.filename');
   }
 
   foreach ($result as $file) {
@@ -173,6 +183,7 @@ function download_count_reset_form_submit($form, &$form_state) {
   else {
     $result = db_delete('download_count')
       ->condition('fid', $form['fid']['#value'])
+      ->condition('type', $form['type']['#value'])
       ->condition('id', $form['id']['#value'])
       ->execute();
     if ($result) {
