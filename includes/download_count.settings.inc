@@ -50,7 +50,7 @@ function download_count_admin_settings($form, &$form_state) {
    $form['download count page']['download_count_view_page_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Title'),
-    '#default_value' => variable_get('download_count_view_page_title', t('Download Count')),
+    '#default_value' => variable_get('download_count_view_page_title', t('Download Counts')),
     '#description' => t('Title of this <a href="@page">page</a>.', array('@page' => url('download_count'))),
   );
   $header = variable_get('download_count_view_page_header', '');

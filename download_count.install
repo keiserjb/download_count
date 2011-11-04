@@ -74,6 +74,39 @@ function download_count_schema() {
     ),
     'primary key' => array('dcid'),
   );
+
+  $schema['download_count_cache'] = array(
+    'fields' => array(
+      'dc_cache_id' => array(
+        'description' => 'Primary Key: Unique download count cache id.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'fid' => array(
+        'description' => t('The id from the drupal files table of the file downloaded.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'date' => array(
+        'description' => t('The date the file was downloaded.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'count' => array(
+        'description' => t('Number of times a file was downloaded in one day.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('dc_cache_id', 'fid', 'date'),
+  );
   return $schema;
 }
 
@@ -88,4 +121,5 @@ function download_count_uninstall() {
   variable_del('download_count_view_page_header');
   variable_del('download_count_view_page_footer');
   variable_del('download_count_export_range');
+  variable_del('download_count_last_cron');
 }
