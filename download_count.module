@@ -152,7 +152,7 @@ function download_count_cron() {
   $result = db_query('SELECT fid, UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(timestamp))) as date, COUNT(dcid) as count FROM {download_count} WHERE timestamp > :last_cron GROUP BY fid, DATE(FROM_UNIXTIME(timestamp)) ORDER BY count DESC', array(':last_cron' => $last_cron));
   foreach ($result as $record) {
     $update = db_query('SELECT fid, date, count FROM {download_count_cache} WHERE fid = :fid AND date = :date', array(':fid' => $record->fid, ':date' => $record->date))->fetchObject();
-    if (isset($update)) {
+    if ($update !== FALSE) {
       $status = db_update('download_count_cache')
         ->fields(array(
           'count' => $record->count + $update->count,
