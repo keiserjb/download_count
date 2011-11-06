@@ -145,25 +145,37 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
  */
 function download_count_cron() {
   $time = REQUEST_TIME;
-  $dc_cache_id = 0;
+  $status = 0;
   $count = 0;
   $last_cron = variable_get('download_count_last_cron', 0);
 
   $result = db_query('SELECT fid, UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(timestamp))) as date, COUNT(dcid) as count FROM {download_count} WHERE timestamp > :last_cron GROUP BY fid, DATE(FROM_UNIXTIME(timestamp)) ORDER BY count DESC', array(':last_cron' => $last_cron));
   foreach ($result as $record) {
-    $dc_cache_id = db_insert('download_count_cache')
-      ->fields(array(
-        'fid' => $record->fid,
-        'date' => $record->date,
-        'count' => $record->count,
-        ))
-      ->execute();
-    if ($dc_cache_id > 0) {
+    $update = db_query('SELECT fid, date, count FROM {download_count_cache} WHERE fid = :fid AND date = :date', array(':fid' => $record->fid, ':date' => $record->date))->fetchObject();
+    if (isset($update)) {
+      $status = db_update('download_count_cache')
+        ->fields(array(
+          'count' => $record->count + $update->count,
+          ))
+        ->condition('fid', $record->fid, '=')
+        ->condition('date', $record->date, '=')
+        ->execute();
+    }
+    else {
+      $status = db_insert('download_count_cache')
+        ->fields(array(
+          'fid' => $record->fid,
+          'date' => $record->date,
+          'count' => $record->count,
+          ))
+        ->execute();
+    }
+    if ($status > 0) {
       $count++;
     }
   }
 
-  if ($dc_cache_id > 0) {
+  if ($status > 0) {
     watchdog('download_count', 'The download count cache was successfully updated with %count new entries.',  array('%count' => $count), WATCHDOG_NOTICE);
   }
   else {
