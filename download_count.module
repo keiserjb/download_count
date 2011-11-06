@@ -233,7 +233,7 @@ function download_count_block_view($delta) {
 }
 
 function _download_count_block_contents($block) {
-  $limit = variable_get('download_count_' . $block . '_block_limit', 10);
+  $limit = (int) variable_get('download_count_' . $block . '_block_limit', 10);
   $rows = array();
   $count = 0;
   if ($block == 'top_files') {
@@ -265,9 +265,9 @@ function _download_count_block_contents($block) {
     $row[] = $block == 'top_files' ? $file->count : t('%time ago', array('%time' => format_interval(REQUEST_TIME - $file->date)));
     $rows[] = $row;
     $count++;
-   }
+  }
 
-   if (count($rows)) {
+  if (count($rows)) {
     return theme('table', array('header' => $header, 'rows' => $rows,'sticky' => FALSE));
   }
 }
