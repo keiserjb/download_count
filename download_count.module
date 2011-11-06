@@ -235,7 +235,6 @@ function download_count_block_view($delta) {
 function _download_count_block_contents($block) {
   $limit = (int) variable_get('download_count_' . $block . '_block_limit', 10);
   $rows = array();
-  $count = 0;
   if ($block == 'top_files') {
     $sql = 'SELECT dcc.fid, dcc.count, f.filename, f.filesize FROM {download_count_cache} dcc JOIN {file_managed} f ON dcc.fid = f.fid ORDER BY dcc.count DESC LIMIT 0,' . $limit;
   }
@@ -258,13 +257,11 @@ function _download_count_block_contents($block) {
 
   $result = db_query($sql);
   foreach ($result as $file) {
-    if ($count == $limit) break;
     $row = array();
     $row[] = check_plain($file->filename);
     $row[] = format_size($file->filesize);
     $row[] = $block == 'top_files' ? $file->count : t('%time ago', array('%time' => format_interval(REQUEST_TIME - $file->date)));
     $rows[] = $row;
-    $count++;
   }
 
   if (count($rows)) {
