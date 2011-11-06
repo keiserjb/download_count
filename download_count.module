@@ -237,10 +237,10 @@ function _download_count_block_contents($block) {
   $rows = array();
   $count = 0;
   if ($block == 'top_files') {
-    $sql = 'SELECT dcc.fid, dcc.count, f.filename, f.filesize FROM {download_count_cache} dcc JOIN {file_managed} f ON dcc.fid = f.fid ORDER BY dcc.count DESC';
+    $sql = 'SELECT dcc.fid, dcc.count, f.filename, f.filesize FROM {download_count_cache} dcc JOIN {file_managed} f ON dcc.fid = f.fid ORDER BY dcc.count DESC LIMIT 0,' . $limit;
   }
   else {
-    $sql = 'SELECT dc.fid, MAX(dc.timestamp) as date, f.filename, f.filesize FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.fid ORDER BY date DESC';
+    $sql = 'SELECT dc.fid, MAX(dc.timestamp) as date, f.filename, f.filesize FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.fid ORDER BY date DESC LIMIT 0,' . $limit;
   }
 
   $header[] = array(
