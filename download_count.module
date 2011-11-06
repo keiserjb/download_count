@@ -183,3 +183,91 @@ function download_count_cron() {
   }
   variable_set('download_count_last_cron', $time);
 }
+
+/**
+ * Implements hook_block_info().
+ */
+function download_count_block_info() {
+  $blocks['top_files']['info'] = t('Top Downloaded Files');
+  $blocks['recent_files']['info'] = t('Recently Downloaded Files');
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function download_count_block_configure($delta) {
+  $form['download_count_' . $delta . '_block_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of items to display'),
+    '#size' => 5,
+    '#default_value' => variable_get('download_count_' . $delta . '_block_limit', 10),
+  );
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function download_count_block_save($delta, $edit) {
+  variable_set('download_count_' . $delta . '_block_limit', $edit['download_count_' . $delta . '_block_limit']);
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function download_count_block_view($delta) {
+  switch ($delta) {
+    case 'top_files':
+      $blocks['subject'] = t('Top Downloaded Files');
+      $blocks['content'] = _download_count_block_contents('top_files');
+      break;
+
+    case 'recent_files':
+      $blocks['subject'] = t('Recently Downloaded Files');
+      $blocks['content'] = _download_count_block_contents('recent_files');
+      break;
+  }
+
+  return $blocks;
+}
+
+function _download_count_block_contents($block) {
+  $limit = variable_get('download_count_' . $block . '_block_limit', 10);
+  $rows = array();
+  $count = 0;
+  if ($block == 'top_files') {
+    $sql = 'SELECT dcc.fid, dcc.count, f.filename, f.filesize FROM {download_count_cache} dcc JOIN {file_managed} f ON dcc.fid = f.fid ORDER BY dcc.count DESC';
+  }
+  else {
+    $sql = 'SELECT dc.fid, MAX(dc.timestamp) as date, f.filename, f.filesize FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid GROUP BY dc.fid ORDER BY date DESC';
+  }
+
+  $header[] = array(
+    'data' => t('Name'),
+    'class' => 'filename',
+  );
+  $header[] = array(
+    'data' => t('Size'),
+    'class' => 'size',
+  );
+  $header[] = array(
+    'data' => $block == 'top_files' ? t('Count') : t('Last Downloaded'),
+    'class' =>$block == 'top_files' ? 'count' : 'last',
+  );
+
+  $result = db_query($sql);
+  foreach ($result as $file) {
+    if ($count == $limit) break;
+    $row = array();
+    $row[] = check_plain($file->filename);
+    $row[] = format_size($file->filesize);
+    $row[] = $block == 'top_files' ? $file->count : t('%time ago', array('%time' => format_interval(REQUEST_TIME - $file->date)));
+    $rows[] = $row;
+    $count++;
+   }
+
+   if (count($rows)) {
+    return theme('table', array('header' => $header, 'rows' => $rows,'sticky' => FALSE));
+  }
+}
