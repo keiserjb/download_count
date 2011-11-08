@@ -105,7 +105,7 @@ function download_count_schema() {
         'default' => 0,
       ),
     ),
-    'primary key' => array('dc_cache_id', 'fid', 'date'),
+    'primary key' => array('dc_cache_id', 'date', 'fid'),
   );
   return $schema;
 }

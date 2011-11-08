@@ -1,0 +1,124 @@
+diff --git a/download_count.install b/download_count.install
+index 93bb3f0..8b95e0f 100644
+--- a/download_count.install
++++ b/download_count.install
+@@ -105,7 +105,7 @@ function download_count_schema() {
+         'default' => 0,
+       ),
+     ),
+-    'primary key' => array('dc_cache_id', 'fid', 'date'),
++    'primary key' => array('dc_cache_id', 'date', 'fid'),
+   );
+   return $schema;
+ }
+diff --git a/download_count.module b/download_count.module
+index 859b107..cac91f7 100644
+--- a/download_count.module
++++ b/download_count.module
+@@ -232,6 +232,9 @@ function download_count_block_view($delta) {
+   return $blocks;
+ }
+ 
++/**
++ * Generate block contents based on delta.
++ */
+ function _download_count_block_contents($block) {
+   $limit = (int) variable_get('download_count_' . $block . '_block_limit', 10);
+   $rows = array();
+diff --git a/includes/download_count.export.inc b/includes/download_count.export.inc
+index bd85f85..b33893c 100644
+--- a/includes/download_count.export.inc
++++ b/includes/download_count.export.inc
+@@ -100,11 +100,12 @@ function download_count_export_data($filename, $range, $file_info, $start, $end)
+   $query = db_select('download_count', 'dc')
+     ->fields('dc', array('dcid', 'fid', 'type', 'bundle','id', 'uid', 'ip_address', 'referrer', 'timestamp'))
+     ->fields('f', array('filename', 'filesize', 'uri'))
+-    ->fields('u', array('name'))
+-    ->orderBy('filename', 'ASC');
++    ->fields('u', array('name'));
+   $query->join('file_managed', 'f', 'dc.fid = f.fid');
+   $query->join('users', 'u', 'dc.uid = u.uid');
+   if ($file_info != 'all') {
++    $query->condition('dc.type', $file_info->type, '=');
++    $query->condition('dc.id', $file_info->id, '=');
+     $query->condition('dc.fid', $file_info->fid, '=');
+   }
+   if ($range > 0) {
+diff --git a/includes/download_count.pages.inc b/includes/download_count.pages.inc
+index 5c27db9..007a37c 100644
+--- a/includes/download_count.pages.inc
++++ b/includes/download_count.pages.inc
+@@ -18,6 +18,7 @@ function download_count_view_page($arg = NULL) {
+   $total_downloads = 0;
+   $files = array();
+   $colspan = 0;
++  $item = 1;
+   $limit = (int) variable_get('download_count_view_page_limit', 0);
+   $items_per_page = (int) variable_get('download_count_view_page_items', 0);
+   $page_header = variable_get('download_count_view_page_header', '');
+@@ -25,11 +26,18 @@ function download_count_view_page($arg = NULL) {
+   $output = '<div id="download-count-page">';
+ 
+   $header[] = array(
++    'data' => t('#'),
++  );
++  $header[] = array(
+     'data' => t('Count'),
+     'field' => t('count'),
+     'sort' => t('desc'),
+   );
+   $header[] = array(
++    'data' => t('FID'),
++    'field' => t('FID'),
++  );
++  $header[] = array(
+     'data' => t('Entity Type'),
+     'field' => t('type'),
+   );
+@@ -46,8 +54,12 @@ function download_count_view_page($arg = NULL) {
+     'field' => t('filename'),
+   );
+   $header[] = array(
+-    'data' => t('Size'),
+-    'field' => t('filesize'),
++    'data' => t('File Size'),
++    'field' => t('file-size'),
++  );
++  $header[] = array(
++    'data' => t('Total Size'),
++    'field' => t('total-size'),
+   );
+   $header[] = array(
+     'data' => t('Last Downloaded'),
+@@ -59,7 +71,7 @@ function download_count_view_page($arg = NULL) {
+     ->fields('f', array('filename', 'fid', 'filesize', 'uri'))
+     ->groupBy('dc.type')
+     ->groupBy('dc.id')
+-    ->groupBy('f.filename');
++    ->groupBy('dc.fid');
+   if ($limit > 0) {
+     $query->range(0, $limit);
+   }
+@@ -74,18 +86,22 @@ function download_count_view_page($arg = NULL) {
+   $result = $query->execute();
+   foreach ($result as $file) {
+     $row = array();
++    $row[] = $item;
+     $row[] = $file->count;
++    $row[] = $file->fid;
+     $row[] = $file->type;
+     $row[] = $file->bundle;
+     $row[] = $file->id;
+     $row[] = $file->filename;
+     $row[] = format_size($file->filesize);
++    $row[] = format_size($file->count * $file->filesize);
+     $row[] = t('@time ago', array('@time' => format_interval(REQUEST_TIME - $file->last)));
+     $row[] = l(t('Details'), 'admin/reports/download-count/' . $file->dcid . '/details');
+     user_access('export download counts') ? $row[] = l(t('Export'), 'admin/reports/download-count/' . $file->dcid . '/export') : NULL;
+     user_access('administer site configuration') ? $row[] = l(t('Reset'), 'admin/reports/download-count/' . $file->dcid . '/reset') : NULL;
+     $rows[] = $row;
+ 
++    $item++;
+     $total_downloads += $file->count;
+     $files[] = $file->filename;
+     $colspan = count($rows[0]) - count($header);

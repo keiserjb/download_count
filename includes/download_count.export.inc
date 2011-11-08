@@ -100,11 +100,12 @@ function download_count_export_data($filename, $range, $file_info, $start, $end)
   $query = db_select('download_count', 'dc')
     ->fields('dc', array('dcid', 'fid', 'type', 'bundle','id', 'uid', 'ip_address', 'referrer', 'timestamp'))
     ->fields('f', array('filename', 'filesize', 'uri'))
-    ->fields('u', array('name'))
-    ->orderBy('filename', 'ASC');
+    ->fields('u', array('name'));
   $query->join('file_managed', 'f', 'dc.fid = f.fid');
   $query->join('users', 'u', 'dc.uid = u.uid');
   if ($file_info != 'all') {
+    $query->condition('dc.type', $file_info->type, '=');
+    $query->condition('dc.id', $file_info->id, '=');
     $query->condition('dc.fid', $file_info->fid, '=');
   }
   if ($range > 0) {

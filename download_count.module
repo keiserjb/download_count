@@ -232,6 +232,9 @@ function download_count_block_view($delta) {
   return $blocks;
 }
 
+/**
+ * Generate block contents based on delta.
+ */
 function _download_count_block_contents($block) {
   $limit = (int) variable_get('download_count_' . $block . '_block_limit', 10);
   $rows = array();

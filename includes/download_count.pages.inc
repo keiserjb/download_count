@@ -18,6 +18,7 @@ function download_count_view_page($arg = NULL) {
   $total_downloads = 0;
   $files = array();
   $colspan = 0;
+  $item = 1;
   $limit = (int) variable_get('download_count_view_page_limit', 0);
   $items_per_page = (int) variable_get('download_count_view_page_items', 0);
   $page_header = variable_get('download_count_view_page_header', '');
@@ -25,9 +26,16 @@ function download_count_view_page($arg = NULL) {
   $output = '<div id="download-count-page">';
 
   $header[] = array(
+    'data' => t('#'),
+  );
+  $header[] = array(
     'data' => t('Count'),
     'field' => t('count'),
     'sort' => t('desc'),
+  );
+  $header[] = array(
+    'data' => t('FID'),
+    'field' => t('FID'),
   );
   $header[] = array(
     'data' => t('Entity Type'),
@@ -46,8 +54,12 @@ function download_count_view_page($arg = NULL) {
     'field' => t('filename'),
   );
   $header[] = array(
-    'data' => t('Size'),
-    'field' => t('filesize'),
+    'data' => t('File Size'),
+    'field' => t('file-size'),
+  );
+  $header[] = array(
+    'data' => t('Total Size'),
+    'field' => t('total-size'),
   );
   $header[] = array(
     'data' => t('Last Downloaded'),
@@ -59,7 +71,7 @@ function download_count_view_page($arg = NULL) {
     ->fields('f', array('filename', 'fid', 'filesize', 'uri'))
     ->groupBy('dc.type')
     ->groupBy('dc.id')
-    ->groupBy('f.filename');
+    ->groupBy('dc.fid');
   if ($limit > 0) {
     $query->range(0, $limit);
   }
@@ -74,18 +86,22 @@ function download_count_view_page($arg = NULL) {
   $result = $query->execute();
   foreach ($result as $file) {
     $row = array();
+    $row[] = $item;
     $row[] = $file->count;
+    $row[] = $file->fid;
     $row[] = $file->type;
     $row[] = $file->bundle;
     $row[] = $file->id;
     $row[] = $file->filename;
     $row[] = format_size($file->filesize);
+    $row[] = format_size($file->count * $file->filesize);
     $row[] = t('@time ago', array('@time' => format_interval(REQUEST_TIME - $file->last)));
     $row[] = l(t('Details'), 'admin/reports/download-count/' . $file->dcid . '/details');
     user_access('export download counts') ? $row[] = l(t('Export'), 'admin/reports/download-count/' . $file->dcid . '/export') : NULL;
     user_access('administer site configuration') ? $row[] = l(t('Reset'), 'admin/reports/download-count/' . $file->dcid . '/reset') : NULL;
     $rows[] = $row;
 
+    $item++;
     $total_downloads += $file->count;
     $files[] = $file->filename;
     $colspan = count($rows[0]) - count($header);
