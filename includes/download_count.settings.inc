@@ -48,7 +48,7 @@ function download_count_admin_settings($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Number of items per page'),
     '#size' => 10,
-    '#default_value' => variable_get('download_count_view_page_items', 0),
+    '#default_value' => variable_get('download_count_view_page_items', 25),
     '#description' => t('Set to 0 for no pager.'),
   );
   $header = variable_get('download_count_view_page_header', '');
