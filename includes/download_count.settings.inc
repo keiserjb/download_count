@@ -69,6 +69,49 @@ function download_count_admin_settings($form, &$form_state) {
     '#default_value' => isset($footer['value']) ? $footer['value'] : NULL,
     '#description' => t('Text to appear underneath the download count table.'),
   );
-
+  $form['download_count_cache_clear'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Clear Download Count Cache'),
+    '#description' => t('This will permanently remove the download count cache data from the database.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['download_count_cache_clear']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Clear Cache'),
+    '#submit' => array('download_count_clear_submit'),
+  );
   return system_settings_form($form);
+}
+
+/**
+ * Clear cache button submit handler.
+ */
+function download_count_clear_submit($form, &$form_state) {
+  $form_state['redirect'] = 'admin/config/media/download-count/clear';
+}
+
+/**
+ * Form to confirm clearing of the download_count_cache table.
+ */
+function download_count_clear_confirm($form, &$form_state) {
+  return confirm_form(
+    $form,
+    t('Are you sure you want to clear the download count cache?'),
+    'admin/config/media/download-count',
+    t('This action cannot be undone.'),
+    t('Clear Cache'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Form submit handler for download_count_clear_confirm().
+ */
+function download_count_clear_confirm_submit($form, &$form_state) {
+  variable_set('download_count_last_cron', 0);
+  db_truncate('download_count_cache')->execute();
+  drupal_set_message(t('The download count cache has been cleared.'));
+  watchdog('download_count', 'The download count cache has been cleared.', array(), WATCHDOG_NOTICE);
+  $form_state['redirect'] = 'admin/config/media/download-count';
 }

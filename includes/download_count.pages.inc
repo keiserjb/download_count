@@ -9,12 +9,7 @@
  * Page callback for the view download counts page.
  */
 function download_count_view_page($arg = NULL) {
-
   drupal_set_title(variable_get('download_count_view_page_title', 'Download Counts'));
-  global $user;
-  $rows = array();
-  $header = array();
-  $result = NULL;
   $total_downloads = 0;
   $files = array();
   $colspan = 0;
@@ -25,64 +20,65 @@ function download_count_view_page($arg = NULL) {
   $page_footer = variable_get('download_count_view_page_footer', '');
   $output = '<div id="download-count-page">';
 
-  $header[] = array(
-    'data' => t('#'),
-  );
-  $header[] = array(
-    'data' => t('Count'),
-    'field' => t('count'),
-    'sort' => t('desc'),
-  );
-  $header[] = array(
-    'data' => t('FID'),
-    'field' => t('FID'),
-  );
-  $header[] = array(
-    'data' => t('Entity Type'),
-    'field' => t('type'),
-  );
-  $header[] = array(
-    'data' => t('Bundle Type'),
-    'field' => t('bundle'),
-  );
-  $header[] = array(
-    'data' => t('Entity ID'),
-    'field' => t('id'),
-  );
-  $header[] = array(
-    'data' => t('File name'),
-    'field' => t('filename'),
-  );
-  $header[] = array(
-    'data' => t('File Size'),
-    'field' => t('file-size'),
-  );
-  $header[] = array(
-    'data' => t('Total Size'),
-    'field' => t('total-size'),
-  );
-  $header[] = array(
-    'data' => t('Last Downloaded'),
-    'field' => t('last'),
+  $header = array(
+    array(
+      'data' => t('#'),
+    ),
+    array(
+      'data' => t('Count'),
+      'field' => t('count'),
+      'sort' => t('desc'),
+    ),
+    array(
+      'data' => t('FID'),
+      'field' => t('FID'),
+    ),
+    array(
+      'data' => t('Entity Type'),
+      'field' => t('type'),
+    ),
+     array(
+      'data' => t('Entity ID'),
+      'field' => t('id'),
+    ),
+    array(
+      'data' => t('File name'),
+      'field' => t('filename'),
+    ),
+    array(
+      'data' => t('File Size'),
+      'field' => t('file-size'),
+    ),
+    array(
+      'data' => t('Total Size'),
+      'field' => t('total-size'),
+    ),
+    array(
+      'data' => t('Last Downloaded'),
+      'field' => t('last'),
+    ),
   );
 
   $query = db_select('download_count', 'dc')
-    ->fields('dc', array('dcid', 'type', 'bundle','id'))
+    ->fields('dc', array('dcid', 'type','id'))
     ->fields('f', array('filename', 'fid', 'filesize', 'uri'))
     ->groupBy('dc.type')
     ->groupBy('dc.id')
     ->groupBy('dc.fid');
-  if ($limit > 0) {
-    $query->range(0, $limit);
-  }
   $query->addExpression('COUNT(dc.dcid)', 'count');
   $query->addExpression('MAX(dc.timestamp)', 'last');
   $query->join('file_managed', 'f', 'dc.fid = f.fid');
+
+  if ($limit > 0) {
+    $query->range(0, $limit);
+  }
+  
   if ($items_per_page > 0) {
     $query = $query->extend('PagerDefault')->limit($items_per_page);
   }
   $query = $query->extend('TableSort')->orderByHeader($header);
 
+  $rows = array();
   $result = $query->execute();
   foreach ($result as $file) {
     $row = array();
@@ -90,17 +86,19 @@ function download_count_view_page($arg = NULL) {
     $row[] = $file->count;
     $row[] = $file->fid;
     $row[] = $file->type;
-    $row[] = $file->bundle;
     $row[] = $file->id;
     $row[] = $file->filename;
     $row[] = format_size($file->filesize);
     $row[] = format_size($file->count * $file->filesize);
     $row[] = t('@time ago', array('@time' => format_interval(REQUEST_TIME - $file->last)));
     $row[] = l(t('Details'), 'admin/reports/download-count/' . $file->dcid . '/details');
-    user_access('export download counts') ? $row[] = l(t('Export'), 'admin/reports/download-count/' . $file->dcid . '/export') : NULL;
-    user_access('administer site configuration') ? $row[] = l(t('Reset'), 'admin/reports/download-count/' . $file->dcid . '/reset') : NULL;
+    if (user_access('export download counts')) {
+      $row[] = l(t('Export'), 'admin/reports/download-count/' . $file->dcid . '/export');
+    }
+    if (user_access('reset download counts')) {
+      $row[] = l(t('Reset'), 'admin/reports/download-count/' . $file->dcid . '/reset');
+    }
     $rows[] = $row;
-
     $item++;
     $total_downloads += $file->count;
     $files[] = $file->filename;
@@ -116,27 +114,31 @@ function download_count_view_page($arg = NULL) {
 
   if ($colspan > 1) {
     $header[] = array(
-      'data' => t('Action(s)')
-        . (user_access('export download counts') || user_access('administer site configuration') ? '&nbsp;&nbsp;[' : NULL)
+      'data' => t('Actions')
+        . '&nbsp;&nbsp;['
+        . l(t('Details All'), 'admin/reports/download-count/all/details')
         . (user_access('export download counts') ? l(t('Export All'), 'admin/reports/download-count/all/export') : NULL)
-        . (user_access('export download counts') && user_access('administer site configuration') ? ' / ' : NULL)
-        . (user_access('administer site configuration') ? l(t('Reset All'), 'admin/reports/download-count/all/reset') : NULL)
-        . (user_access('export download counts') || user_access('administer site configuration') ? ']' : NULL),
+        . (user_access('reset download counts') ? l(t('Reset All'), 'admin/reports/download-count/all/reset') : NULL)
+        . ']',
       'colspan' => $colspan,
+      'id' => 'actions',
     );
     drupal_add_css(drupal_get_path('module', 'download_count') . '/download_count.css');
   }
-
-  $output .= check_markup($page_header['value'], $page_header['format']);
+  if (!empty($page_header['value'])) {
+    $output .= '<div id="download-count-header">' . check_markup($page_header['value'], $page_header['format']) . '</div>';
+  }
   $output .= '<div id="download-count-summary-top">' . t('Unique Files:') . ' ' . count(array_unique($files)) . ', ' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'download-count-table')));
   $output .= '<div id="download-count-summary-bottom">' . t('Unique Files:') . ' ' . count(array_unique($files)) . ', ' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
   if ($items_per_page > 0) {
     $output .= theme('pager',array('tags' => array()));
   }
-  $output .= check_markup($page_footer['value'], $page_footer['format']);
-
+  if (!empty($page_footer['value'])) {
+    $output .= '<div id="download-count-footer">' . check_markup($page_footer['value'], $page_footer['format']) . '</div>';
+  }
   $output .= '</div>';
+
   return $output;
 }
 
@@ -162,17 +164,13 @@ function download_count_reset_form($form, $form_state, $dc_entry = NULL) {
       '#type' => 'value',
       '#value' => $dc_entry->type,
     );
-    $form['bundle'] = array(
-      '#type' => 'value',
-      '#value' => $dc_entry->bundle,
-    );
     $form['id'] = array(
       '#type' => 'value',
       '#value' => $dc_entry->id,
     );
     return confirm_form(
       $form,
-      t('Are you sure you want to reset the download count for %filename?', array('%filename' => $dc_entry->filename)),
+      t('Are you sure you want to reset the download count for %filename on %entity #%id?', array('%filename' => $dc_entry->filename, '%entity' => $dc_entry->type, '%id' => $dc_entry->id)),
       'admin/reports/download-count',
       t('This action cannot be undone.'),
       t('Reset'),
@@ -204,6 +202,7 @@ function download_count_reset_form_submit($form, &$form_state) {
 
     $result = db_delete('download_count')->execute();
     if ($result) {
+      db_delete('download_count_cache')->execute();
       drupal_set_message(t('All download counts have been reset.'));
       watchdog('download_count', 'All download counts have been reset.', WATCHDOG_NOTICE);
     }
@@ -219,6 +218,11 @@ function download_count_reset_form_submit($form, &$form_state) {
       ->condition('id', $form['id']['#value'])
       ->execute();
     if ($result) {
+      db_delete('download_count_cache')
+        ->condition('fid', $form['fid']['#value'])
+        ->condition('type', $form['type']['#value'])
+        ->condition('id', $form['id']['#value'])
+        ->execute();
       drupal_set_message(t('Download count for %filename on %type %id was reset.', array('%filename' => $form['filename']['#value'], '%type' => $form['type']['#value'], '%id' => $form['id']['#value'])));
       watchdog('download_count', 'Download count for %filename on %type %id was reset.', array('%filename' => $form['filename']['#value'], '%type' => $form['type']['#value'], '%id' => $form['id']['#value']), WATCHDOG_NOTICE);
     }
@@ -230,11 +234,86 @@ function download_count_reset_form_submit($form, &$form_state) {
   $form_state['redirect'] = 'admin/reports/download-count';
 }
 
-function download_count_view_details($arg = NULL) {
-
-  drupal_set_title('Download Count Details for ' . $arg->filename . ' on ' . $arg->type . ' ' . $arg->id);
+/**
+ * Download_count details page callback.
+ */
+function download_count_view_details($dc_entry = NULL) {
+  drupal_add_css(drupal_get_path('module', 'download_count') . '/download_count.css');
   $output = l(t('&#0171; Back to summary'), 'admin/reports/download-count', array ('html' => true));
-  $output .= '<br />TBD - WORK IN PROGRESS';
+
+  if ($dc_entry == 'all') {
+    drupal_set_title(t('Download Count Details - All Files'));
+  }
+  else {
+    drupal_set_title(t('Download Count Details - @filename from @type @id', array('@filename' => $dc_entry->filename, '@type' => $dc_entry->type, '@id' => $dc_entry->id)));
+  }
+
+  // determine first day of week (from date module if set, 'Sunday' if not).
+  if (variable_get('date_first_day', '0') == 0) {
+    $week_format = '%U';
+  }
+  else {
+    $week_format = '%u';
+  }
+
+  //base query for all files for all intervals
+  $query = db_select('download_count_cache')
+    ->fields(NULL,array('date'))
+    ->groupBy('range');
+  $query->addExpression('SUM(count)', 'count');
+  $query->orderBy('date', 'DESC');
+  $expressions =& $query->getExpressions();
+
+  // Details for a specific download and entity.
+  if ($dc_entry != 'all') {
+    $query->condition('type', $dc_entry->type, '=');
+    $query->condition('id', $dc_entry->id, '=');
+    $query->condition('fid', $dc_entry->fid, '=');
+  }
+
+  // daily data
+  $query->addExpression("FROM_UNIXTIME(date, '%Y-%m-%d')", 'range');
+  $result = $query->execute();
+  $output .= _download_count_details_table($result, 'Daily', 'Day');
+
+  // weekly data
+  $expressions['range']['expression'] = "FROM_UNIXTIME(date, '$week_format')";
+  $result = $query->execute();
+  $output .= _download_count_details_table($result, 'Weekly', 'Week');
+
+  // monthly data
+  $expressions['range']['expression'] = "FROM_UNIXTIME(date, '%Y-%m')";
+  $result = $query->execute();
+  $output .= _download_count_details_table($result, 'Monthly', 'Month');
+
+  // yearly data
+  $expressions['range']['expression'] = "FROM_UNIXTIME(date, '%Y')";
+  $result = $query->execute();
+  $output .= _download_count_details_table($result, 'Yearly', 'Year');
 
   return $output;
+}
+
+/**
+ * Create and output details table.
+ */
+function _download_count_details_table($result, $caption, $range) {
+    $header = array(
+      array(
+        'data' => t($range),
+      ),
+      array(
+        'data' => t('Count'),
+      ),
+    );
+    $rows = array();
+    foreach ($result as $download) {
+      $row = array();
+      $row[] = $download->range;
+      $row[] = $download->count;
+      $rows[] = $row;
+    }
+    $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => $caption, 'sticky' => FALSE, 'attributes' => array('id' => 'download-count-' . strtolower(drupal_clean_css_identifier($caption)), 'class' => 'download-count-table')));
+
+    return $output;
 }

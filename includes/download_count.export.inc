@@ -29,7 +29,6 @@ function download_count_export_form($form, $form_state, $dc_entry = NULL) {
       . '<li>' . t('File name')
       . '<li>' . t('File size')
       . '<li>' . t('Entity type')
-      . '<li>' . t('Bundle type')
       . '<li>' . t('Entity id ')
       . '<li>' . t('Downloading user id')
       . '<li>' . t('Downloading username')
@@ -90,15 +89,13 @@ function download_count_export_form_submit($form, &$form_state) {
 }
 
 function download_count_export_data($filename, $range, $file_info, $start, $end) {
-
   ob_end_clean();
-
   drupal_add_http_header('Content-Disposition', 'attachment; filename="' . $filename . '"');
   drupal_add_http_header('Content-Type', 'application/csv');
   drupal_send_headers();
 
   $query = db_select('download_count', 'dc')
-    ->fields('dc', array('dcid', 'fid', 'type', 'bundle','id', 'uid', 'ip_address', 'referrer', 'timestamp'))
+    ->fields('dc', array('dcid', 'fid', 'type', 'id', 'uid', 'ip_address', 'referrer', 'timestamp'))
     ->fields('f', array('filename', 'filesize', 'uri'))
     ->fields('u', array('name'));
   $query->join('file_managed', 'f', 'dc.fid = f.fid');
@@ -119,7 +116,7 @@ function download_count_export_data($filename, $range, $file_info, $start, $end)
   }
 
   $result = $query->execute();
-  $column_names = '"Download count id","File id","File name","File URI","File size","Entity type","Bundle type","Entity id","Downloading user id","Downloading username","Downloading user ip address","HTTP referrer","Date time"' . "\n";
+  $column_names = '"Download count id","File id","File name","File URI","File size","Entity type","Entity id","Downloading user id","Downloading username","Downloading user ip address","HTTP referrer","Date time"' . "\n";
   print $column_names;
   foreach ($result as $record) {
     $row  = '"' . $record->dcid . '"' . ',';
@@ -128,7 +125,6 @@ function download_count_export_data($filename, $range, $file_info, $start, $end)
     $row .= '"' . $record->uri . '"' . ',';
     $row .= '"' . $record->filesize . '"' . ',';
     $row .= '"' . $record->type . '"' . ',';
-    $row .= '"' . $record->bundle . '"' . ',';
     $row .= '"' . $record->id . '"' . ',';
     $row .= '"' . $record->uid . '"' . ',';
     $row .= '"' . $record->name . '"' . ',';

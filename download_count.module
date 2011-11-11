@@ -20,8 +20,11 @@ function download_count_help($path, $arg) {
  */
 function download_count_permission() {
   $perms = array(
-    'view all download counts' => array(
-      'title' => t('view all download counts'),
+    'view download counts' => array(
+      'title' => t('view download counts'),
+    ),
+    'reset download counts' => array(
+      'title' => t('reset download counts'),
     ),
     'export download counts' => array(
       'title' => t('export download counts'),
@@ -44,6 +47,14 @@ function download_count_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'includes/download_count.settings.inc',
   );
+  $items['admin/config/media/download-count/clear'] = array(
+    'title' => 'Clear Cache',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('download_count_clear_confirm'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/download_count.settings.inc',
+  );
   $items['admin/config/media/download-count/settings'] = array(
     'title' => 'Settings',
     'weight' => 1,
@@ -53,7 +64,7 @@ function download_count_menu() {
     'title' => 'Download Counts',
     'page callback' => 'download_count_view_page',
     'page arguments' => array('download_count'),
-    'access arguments' => array('view all download counts'),
+    'access arguments' => array('view download counts'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'includes/download_count.pages.inc',
   );
@@ -61,7 +72,7 @@ function download_count_menu() {
     'title' => 'Download Count Details',
     'page callback' => 'download_count_view_details',
     'page arguments' => array(3),
-    'access arguments' => array('view all download counts'),
+    'access arguments' => array('view download counts'),
     'type' => MENU_CALLBACK,
     'file' => 'includes/download_count.pages.inc',
   );
@@ -69,7 +80,7 @@ function download_count_menu() {
     'title' => 'Download Count Reset',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('download_count_reset_form', 3),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('reset download counts'),
     'type' => MENU_CALLBACK,
     'file' => 'includes/download_count.pages.inc',
   );
@@ -89,7 +100,7 @@ function download_count_menu() {
  * Menu wildcard loader.
  */
 function download_count_entry_load($dcid) {
-  return $dcid == 'all' ? $dcid : db_query('SELECT dc.dcid, dc.fid, dc.uid, dc.type, dc.bundle, dc.id, dc.ip_address, dc.referrer, dc.timestamp, f.filename, f.uri, f.filemime, f.filesize FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid WHERE dcid = :dcid', array(':dcid' => $dcid))->fetchObject();
+  return $dcid == 'all' ? $dcid : db_query('SELECT dc.dcid, dc.fid, dc.uid, dc.type, dc.id, dc.ip_address, dc.referrer, dc.timestamp, f.filename, f.uri, f.filemime, f.filesize FROM {download_count} dc JOIN {file_managed} f ON dc.fid = f.fid WHERE dcid = :dcid', array(':dcid' => $dcid))->fetchObject();
 }
 
 /**
@@ -117,14 +128,12 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
   $entity_info = entity_get_info($entity_type);
   $ip = ip_address();
   $referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : NULL;
-  $bundle = isset($entity_info['bundle keys']) ? $entity->$entity_info['bundle keys']['bundle'] : '';
 
   $id = db_insert('download_count')
   ->fields(array(
     'fid' => $file['fid'],
     'uid' => $user->uid,
     'type' => $entity_type,
-    'bundle' => $bundle,
     'id' => $entity->$entity_info['entity keys']['id'],
     'ip_address' => $ip,
     'referrer' => $referrer,
@@ -134,7 +143,7 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
   watchdog('download_count', '%file was downloaded by user #%uid from %ip', array('%file' => $file['filename'], '%uid' => $user->uid, '%ip' => $ip), WATCHDOG_NOTICE);
 
   if (module_exists('rules')) {
-    rules_invoke_event('download_count_file_download', $file['filename'], $user, $entity_type, $bundle, $entity->$entity_info['entity keys']['id'], $ip, $referrer, $time);
+    rules_invoke_event('download_count_file_download', $file['filename'], $user, $entity_type, $entity->$entity_info['entity keys']['id'], $ip, $referrer, $time);
   }
 }
 
@@ -149,14 +158,16 @@ function download_count_cron() {
   $count = 0;
   $last_cron = variable_get('download_count_last_cron', 0);
 
-  $result = db_query('SELECT fid, UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(timestamp))) as date, COUNT(dcid) as count FROM {download_count} WHERE timestamp > :last_cron GROUP BY fid, DATE(FROM_UNIXTIME(timestamp)) ORDER BY count DESC', array(':last_cron' => $last_cron));
+  $result = db_query('SELECT fid, type, id, UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(timestamp))) as date, COUNT(dcid) as count FROM {download_count} WHERE timestamp > :last_cron GROUP BY type, id, fid, DATE(FROM_UNIXTIME(timestamp))', array(':last_cron' => $last_cron));
   foreach ($result as $record) {
-    $update = db_query('SELECT fid, date, count FROM {download_count_cache} WHERE fid = :fid AND date = :date', array(':fid' => $record->fid, ':date' => $record->date))->fetchObject();
+    $update = db_query('SELECT count FROM {download_count_cache} WHERE fid = :fid AND type = :type AND id = :id AND date = :date LIMIT 0,1', array(':fid' => $record->fid, ':type' => $record->type, ':id' => $record->id, ':date' => $record->date))->fetchObject();
     if ($update !== FALSE) {
       $status = db_update('download_count_cache')
         ->fields(array(
           'count' => $record->count + $update->count,
           ))
+        ->condition('type', $record->type, '=')
+        ->condition('id', $record->id, '=')
         ->condition('fid', $record->fid, '=')
         ->condition('date', $record->date, '=')
         ->execute();
@@ -165,6 +176,8 @@ function download_count_cron() {
       $status = db_insert('download_count_cache')
         ->fields(array(
           'fid' => $record->fid,
+          'type' => $record->type,
+          'id' => $record->id,
           'date' => $record->date,
           'count' => $record->count,
           ))
