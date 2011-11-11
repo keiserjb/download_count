@@ -200,9 +200,9 @@ function download_count_reset_form_submit($form, &$form_state) {
   $result = NULL;
   if ($form['dcid']['#value'] == 'all') {
 
-    $result = db_delete('download_count')->execute();
+    $result = db_truncate('download_count')->execute();
     if ($result) {
-      db_delete('download_count_cache')->execute();
+      db_truncate('download_count_cache')->execute();
       drupal_set_message(t('All download counts have been reset.'));
       watchdog('download_count', 'All download counts have been reset.', WATCHDOG_NOTICE);
     }

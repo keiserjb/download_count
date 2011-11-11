@@ -1,0 +1,59 @@
+diff --git a/includes/download_count.pages.inc b/includes/download_count.pages.inc
+index 4a3380f..1b1dee6 100644
+--- a/includes/download_count.pages.inc
++++ b/includes/download_count.pages.inc
+@@ -200,9 +200,9 @@ function download_count_reset_form_submit($form, &$form_state) {
+   $result = NULL;
+   if ($form['dcid']['#value'] == 'all') {
+ 
+-    $result = db_delete('download_count')->execute();
++    $result = db_truncate('download_count')->execute();
+     if ($result) {
+-      db_delete('download_count_cache')->execute();
++      db_truncate('download_count_cache')->execute();
+       drupal_set_message(t('All download counts have been reset.'));
+       watchdog('download_count', 'All download counts have been reset.', WATCHDOG_NOTICE);
+     }
+diff --git a/includes/download_count.settings.inc b/includes/download_count.settings.inc
+index be68848..13eb0b8 100644
+--- a/includes/download_count.settings.inc
++++ b/includes/download_count.settings.inc
+@@ -28,31 +28,29 @@ function download_count_admin_settings($form, &$form_state) {
+   $form['download count page'] = array(
+     '#type' => 'fieldset',
+     '#title' => t('Download count page settings'),
++    '#description' => t('Settings for <a href="@page">this</a> page.', array('@page' => url('admin/reports/download-count'))),
+     '#collapsible' => TRUE,
+     '#collapsed' => TRUE,
+   );
++  $form['download count page']['download_count_view_page_title'] = array(
++    '#type' => 'textfield',
++    '#title' => t('Title'),
++    '#default_value' => variable_get('download_count_view_page_title', t('Download Counts')),
++  );
+   $form['download count page']['download_count_view_page_limit'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Total number of items to display'),
+     '#size' => 10,
+-    '#weight' => -1,
+     '#default_value' => variable_get('download_count_view_page_limit', 0),
+     '#description' => t('Set to 0 for no limit.'),
+   );
+   $form['download count page']['download_count_view_page_items'] = array(
+     '#type' => 'textfield',
+-    '#title' => t('Number of items per page.'),
++    '#title' => t('Number of items per page'),
+     '#size' => 10,
+-    '#weight' => -1,
+     '#default_value' => variable_get('download_count_view_page_items', 0),
+     '#description' => t('Set to 0 for no pager.'),
+   );
+-   $form['download count page']['download_count_view_page_title'] = array(
+-    '#type' => 'textfield',
+-    '#title' => t('Title'),
+-    '#default_value' => variable_get('download_count_view_page_title', t('Download Counts')),
+-    '#description' => t('Title of this <a href="@page">page</a>.', array('@page' => url('download_count'))),
+-  );
+   $header = variable_get('download_count_view_page_header', '');
+   $form['download count page']['download_count_view_page_header'] = array(
+     '#type' => 'text_format',

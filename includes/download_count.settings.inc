@@ -28,30 +28,28 @@ function download_count_admin_settings($form, &$form_state) {
   $form['download count page'] = array(
     '#type' => 'fieldset',
     '#title' => t('Download count page settings'),
+    '#description' => t('Settings for <a href="@page">this</a> page.', array('@page' => url('admin/reports/download-count'))),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
+  );
+  $form['download count page']['download_count_view_page_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#default_value' => variable_get('download_count_view_page_title', t('Download Counts')),
   );
   $form['download count page']['download_count_view_page_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Total number of items to display'),
     '#size' => 10,
-    '#weight' => -1,
     '#default_value' => variable_get('download_count_view_page_limit', 0),
     '#description' => t('Set to 0 for no limit.'),
   );
   $form['download count page']['download_count_view_page_items'] = array(
     '#type' => 'textfield',
-    '#title' => t('Number of items per page.'),
+    '#title' => t('Number of items per page'),
     '#size' => 10,
-    '#weight' => -1,
     '#default_value' => variable_get('download_count_view_page_items', 0),
     '#description' => t('Set to 0 for no pager.'),
-  );
-   $form['download count page']['download_count_view_page_title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Title'),
-    '#default_value' => variable_get('download_count_view_page_title', t('Download Counts')),
-    '#description' => t('Title of this <a href="@page">page</a>.', array('@page' => url('download_count'))),
   );
   $header = variable_get('download_count_view_page_header', '');
   $form['download count page']['download_count_view_page_header'] = array(
