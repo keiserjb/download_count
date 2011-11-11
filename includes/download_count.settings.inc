@@ -70,7 +70,7 @@ function download_count_admin_settings($form, &$form_state) {
   $form['download_count_cache_clear'] = array(
     '#type' => 'fieldset',
     '#title' => t('Clear Download Count Cache'),
-    '#description' => t('This will permanently remove the download count cache data from the database.'),
+    '#description' => t('This will permanently remove the download count cache data from the database. It will be rebuilt during drupal cron runs.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
