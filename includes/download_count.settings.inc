@@ -23,7 +23,7 @@ function download_count_admin_settings($form, &$form_state) {
     '#title' => t('Excluded file extensions'),
     '#default_value' => variable_get('download_count_excluded_file_extensions', 'jpg jpeg gif png'),
     '#maxlength' => 255,
-    '#description' => t('To exclude files of certain types, enter the extensions to exclude separated by spaces. This is useful if you have private image fields and don\'t wish to count their downloads.'),
+    '#description' => t('To exclude files of certain types, enter the extensions to exclude separated by spaces. This is useful if you have private image fields and don\'t wish to include them in download counts.'),
   );
   $form['download count page'] = array(
     '#type' => 'fieldset',
