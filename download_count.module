@@ -148,6 +148,17 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
 }
 
 /**
+ * Implements hook_cron_queue_info()
+ */
+function download_count_cron_queue_info() {
+  $queues['download_count'] = array(
+    'worker callback' => 'download_count_cache_processor',
+    'time' => 1,
+  );
+  return $queues;
+}
+
+/**
  * Implements hook_cron().
  *
  * Daily file download counts are cached for convenience.
@@ -159,42 +170,31 @@ function download_count_cron() {
   $last_cron = variable_get('download_count_last_cron', 0);
 
   $result = db_query('SELECT fid, type, id, UNIX_TIMESTAMP(DATE(FROM_UNIXTIME(timestamp))) as date, COUNT(dcid) as count FROM {download_count} WHERE timestamp > :last_cron GROUP BY type, id, fid, DATE(FROM_UNIXTIME(timestamp))', array(':last_cron' => $last_cron));
-  foreach ($result as $record) {
-    $update = db_query('SELECT count FROM {download_count_cache} WHERE fid = :fid AND type = :type AND id = :id AND date = :date LIMIT 0,1', array(':fid' => $record->fid, ':type' => $record->type, ':id' => $record->id, ':date' => $record->date))->fetchObject();
-    if ($update !== FALSE) {
-      $status = db_update('download_count_cache')
-        ->fields(array(
-          'count' => $record->count + $update->count,
-          ))
-        ->condition('type', $record->type, '=')
-        ->condition('id', $record->id, '=')
-        ->condition('fid', $record->fid, '=')
-        ->condition('date', $record->date, '=')
-        ->execute();
-    }
-    else {
-      $status = db_insert('download_count_cache')
-        ->fields(array(
-          'fid' => $record->fid,
-          'type' => $record->type,
-          'id' => $record->id,
-          'date' => $record->date,
-          'count' => $record->count,
-          ))
-        ->execute();
-    }
-    if ($status > 0) {
-      $count++;
-    }
+  $queue = DrupalQueue::get('download_count');
+  foreach($result as $record) {
+    $queue->createItem($record);
+    $count++;
   }
-
-  if ($status > 0) {
-    watchdog('download_count', 'The download count cache was successfully updated with %count new entries.',  array('%count' => $count), WATCHDOG_NOTICE);
-  }
-  else {
-    watchdog('download_count', 'No new downloads were added to the download count cache.', NULL, WATCHDOG_NOTICE);
+  if ($count > 0) {
+    watchdog('download_count', 'Download count queued %count new entries for caching.',  array('%count' => $count), WATCHDOG_NOTICE);
   }
   variable_set('download_count_last_cron', $time);
+}
+
+/**
+ * Adds download count data to the daily cache table.
+ *
+ * @param $record
+ *   An object containing the download to cache.
+ */
+function download_count_cache_processor($record) {
+  db_merge('download_count_cache')
+    ->key(array('type' => $record->type, 'id' => $record->id, 'fid' => $record->fid, 'date' => $record->date,))
+    ->fields(array(
+      'count' => $record->count,
+      ))
+    ->expression('count', 'count + :inc', array(':inc' => $record->count))
+    ->execute();
 }
 
 /**

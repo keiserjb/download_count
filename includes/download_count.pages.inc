@@ -11,7 +11,6 @@
 function download_count_view_page($arg = NULL) {
   drupal_set_title(variable_get('download_count_view_page_title', 'Download Counts'));
   $total_downloads = 0;
-  $files = array();
   $colspan = 0;
   $item = 1;
   $limit = (int) variable_get('download_count_view_page_limit', 0);
@@ -101,7 +100,6 @@ function download_count_view_page($arg = NULL) {
     $rows[] = $row;
     $item++;
     $total_downloads += $file->count;
-    $files[] = $file->filename;
     $colspan = count($rows[0]) - count($header);
   }
 
@@ -128,9 +126,9 @@ function download_count_view_page($arg = NULL) {
   if (!empty($page_header['value'])) {
     $output .= '<div id="download-count-header">' . check_markup($page_header['value'], $page_header['format']) . '</div>';
   }
-  $output .= '<div id="download-count-summary-top">' . t('Unique Files:') . ' ' . count(array_unique($files)) . ', ' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
+  $output .= '<div id="download-count-total-top">' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'download-count-table')));
-  $output .= '<div id="download-count-summary-bottom">' . t('Unique Files:') . ' ' . count(array_unique($files)) . ', ' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
+  $output .= '<div id="download-count-total-bottom">' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
   if ($items_per_page > 0) {
     $output .= theme('pager',array('tags' => array()));
   }
@@ -239,6 +237,8 @@ function download_count_reset_form_submit($form, &$form_state) {
  */
 function download_count_view_details($dc_entry = NULL) {
   drupal_add_css(drupal_get_path('module', 'download_count') . '/download_count.css');
+  $last_cron = variable_get('download_count_last_cron', 0);
+  $total =  db_query('SELECT SUM(count) as total FROM {download_count_cache} LIMIT 0,1')->fetchObject()->total;
   $output = l(t('&#0171; Back to summary'), 'admin/reports/download-count', array ('html' => true));
 
   if ($dc_entry == 'all') {
@@ -247,6 +247,15 @@ function download_count_view_details($dc_entry = NULL) {
   else {
     drupal_set_title(t('Download Count Details - @filename from @type @id', array('@filename' => $dc_entry->filename, '@type' => $dc_entry->type, '@id' => $dc_entry->id)));
   }
+  
+  if ($last_cron > 0) {
+    $output .= '<p>Current as of ' . format_date($last_cron, 'long') . ' with ' . DrupalQueue::get('download_count')->numberOfItems() . ' items still queued to cache.</p>';
+  }
+  else {
+    $output .= '<p>No download count data has been cached. You may want to check Drupal cron.</p>';
+  }
+
+  $output .= '<div id="download-count-total-top"><strong>' . t('Total Downloads:') . '</strong> ' . $total . '</div>';
 
   // determine first day of week (from date module if set, 'Sunday' if not).
   if (variable_get('date_first_day', '0') == 0) {
@@ -276,6 +285,7 @@ function download_count_view_details($dc_entry = NULL) {
   $result = $query->execute();
   $output .= _download_count_details_table($result, 'Daily', 'Day');
 
+
   // weekly data
   $expressions['range']['expression'] = "FROM_UNIXTIME(date, '$week_format')";
   $result = $query->execute();
@@ -291,6 +301,7 @@ function download_count_view_details($dc_entry = NULL) {
   $result = $query->execute();
   $output .= _download_count_details_table($result, 'Yearly', 'Year');
 
+  $output .= '<div id="download-count-total-bottom"><strong>' . t('Total Downloads:') . '</strong> ' . $total . '</div>';
   return $output;
 }
 
