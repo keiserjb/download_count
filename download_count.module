@@ -153,7 +153,7 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
 function download_count_cron_queue_info() {
   $queues['download_count'] = array(
     'worker callback' => 'download_count_cache_processor',
-    'time' => 1,
+    'time' => 60,
   );
   return $queues;
 }
