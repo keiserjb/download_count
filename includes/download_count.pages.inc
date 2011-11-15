@@ -82,7 +82,7 @@ function download_count_view_page($arg = NULL) {
   foreach ($result as $file) {
     $row = array();
     $row[] = $item;
-    $row[] = $file->count;
+    $row[] = number_format($file->count);
     $row[] = $file->fid;
     $row[] = $file->type;
     $row[] = $file->id;
@@ -126,9 +126,9 @@ function download_count_view_page($arg = NULL) {
   if (!empty($page_header['value'])) {
     $output .= '<div id="download-count-header">' . check_markup($page_header['value'], $page_header['format']) . '</div>';
   }
-  $output .= '<div id="download-count-total-top">' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
+  $output .= '<div id="download-count-total-top">' . t('Total Downloads:') . ' ' . number_format($total_downloads) . '</div>';
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'download-count-table')));
-  $output .= '<div id="download-count-total-bottom">' . t('Total Downloads:') . ' ' . $total_downloads . '</div>';
+  $output .= '<div id="download-count-total-bottom">' . t('Total Downloads:') . ' ' . number_format($total_downloads) . '</div>';
   if ($items_per_page > 0) {
     $output .= theme('pager',array('tags' => array()));
   }
@@ -238,18 +238,20 @@ function download_count_reset_form_submit($form, &$form_state) {
 function download_count_view_details($dc_entry = NULL) {
   drupal_add_css(drupal_get_path('module', 'download_count') . '/download_count.css');
   $last_cron = variable_get('download_count_last_cron', 0);
-  $total =  db_query('SELECT SUM(count) as total FROM {download_count_cache} LIMIT 0,1')->fetchObject()->total;
   $output = l(t('&#0171; Back to summary'), 'admin/reports/download-count', array ('html' => true));
 
   if ($dc_entry == 'all') {
     drupal_set_title(t('Download Count Details - All Files'));
+    $total =  number_format(db_query('SELECT SUM(count) FROM {download_count_cache}')->fetchField());
   }
   else {
     drupal_set_title(t('Download Count Details - @filename from @type @id', array('@filename' => $dc_entry->filename, '@type' => $dc_entry->type, '@id' => $dc_entry->id)));
+    $total = number_format(db_query('SELECT SUM(count) FROM {download_count_cache} WHERE type = :type AND id = :id AND fid = :fid', array (':type' => $dc_entry->type, ':id' => $dc_entry->id, ':fid' => $dc_entry->fid))->fetchField());
   }
   
+  
   if ($last_cron > 0) {
-    $output .= '<p>Current as of ' . format_date($last_cron, 'long') . ' with ' . DrupalQueue::get('download_count')->numberOfItems() . ' items still queued to cache.</p>';
+    $output .= '<p>Current as of ' . format_date($last_cron, 'long') . ' with ' . number_format(DrupalQueue::get('download_count')->numberOfItems()) . ' items still queued to cache.</p>';
   }
   else {
     $output .= '<p>No download count data has been cached. You may want to check Drupal cron.</p>';
@@ -264,6 +266,8 @@ function download_count_view_details($dc_entry = NULL) {
   else {
     $week_format = '%u';
   }
+
+  $sparkline_type = variable_get('download_count_sparklines', 'line');
 
   //base query for all files for all intervals
   $query = db_select('download_count_cache')
@@ -282,26 +286,63 @@ function download_count_view_details($dc_entry = NULL) {
 
   // daily data
   $query->addExpression("FROM_UNIXTIME(date, '%Y-%m-%d')", 'range');
+  $query->range(0, variable_get('download_count_details_daily_limit', 30));
   $result = $query->execute();
-  $output .= _download_count_details_table($result, 'Daily', 'Day');
+  $daily =  _download_count_details_table($result, 'Daily', 'Day');
+  $output .= $daily['output'];
+  $values['daily'] = implode(',', $daily['values']);
+  if ($sparkline_type != 'none') {
+      $output .= '<div class="download-count-sparkline-daily">' . t('Rendering Sparkline...') . '</div>';
+  }
 
 
   // weekly data
   $expressions['range']['expression'] = "FROM_UNIXTIME(date, '$week_format')";
+  $query->range(0, variable_get('download_count_details_weekly_limit', 25));
   $result = $query->execute();
-  $output .= _download_count_details_table($result, 'Weekly', 'Week');
+  $weekly = _download_count_details_table($result, 'Weekly', 'Week');
+  $output .= $weekly['output'];
+  $values['weekly'] = implode(',', $weekly['values']);
+  if ($sparkline_type != 'none') {
+      $output .= '<div class="download-count-sparkline-weekly">' . t('Rendering Sparkline...') . '</div>';
+  }
 
   // monthly data
   $expressions['range']['expression'] = "FROM_UNIXTIME(date, '%Y-%m')";
+  $query->range(0, variable_get('download_count_details_monthly_limit', 12));
   $result = $query->execute();
-  $output .= _download_count_details_table($result, 'Monthly', 'Month');
+  $monthly = _download_count_details_table($result, 'Monthly', 'Month');
+  $output .= $monthly['output'];
+  $values['monthly'] = implode(',', $monthly['values']);
+  if ($sparkline_type != 'none') {
+      $output .= '<div class="download-count-sparkline-monthly">' . t('Rendering Sparkline...') . '</div>';
+  }
 
   // yearly data
   $expressions['range']['expression'] = "FROM_UNIXTIME(date, '%Y')";
+  $query->range(0, variable_get('download_count_details_yearly_limit', 5));
   $result = $query->execute();
-  $output .= _download_count_details_table($result, 'Yearly', 'Year');
-
+  $yearly = _download_count_details_table($result, 'Yearly', 'Year');
+  $output .= $yearly['output'];
+  $values['yearly'] = implode(',', $yearly['values']);
+  if ($sparkline_type != 'none') {
+      $output .= '<div class="download-count-sparkline-yearly">' . t('Rendering Sparkline...') . '</div>';
+  }
   $output .= '<div id="download-count-total-bottom"><strong>' . t('Total Downloads:') . '</strong> ' . $total . '</div>';
+
+  if ($sparkline_type != 'none') {
+    drupal_add_library('download_count', 'jquery.sparkline');
+    drupal_add_js(drupal_get_path('module', 'download_count') . '/js/download_count_sparklines.js');
+    $settings['download_count'] = array(
+      'values' => $values,
+      'type' => $sparkline_type,
+      'min' => variable_get('download_count_sparkline_min', '0'),
+      'height' => variable_get('download_count_sparkline_height', '150px'),
+      'width' => variable_get('download_count_sparkline_width', '300px'),
+    );
+    drupal_add_js($settings, array('type' => 'setting'));
+  }
+
   return $output;
 }
 
@@ -311,20 +352,31 @@ function download_count_view_details($dc_entry = NULL) {
 function _download_count_details_table($result, $caption, $range) {
     $header = array(
       array(
-        'data' => t($range),
+        'data' => t('#'),
+        'class' => 'number',
       ),
       array(
-        'data' => t('Count'),
+        'data' => t($range),
+        'class' => 'range',
+      ),
+      array(
+        'data' => t('Downloads'),
+        'class' => 'count',
       ),
     );
+    $count = 1;
     $rows = array();
+    $values = array();
     foreach ($result as $download) {
       $row = array();
+      $row[] = $count;
       $row[] = $download->range;
-      $row[] = $download->count;
+      $row[] = number_format($download->count);
+      $values[] = $download->count;
       $rows[] = $row;
+      $count++;
     }
-    $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => $caption, 'sticky' => FALSE, 'attributes' => array('id' => 'download-count-' . strtolower(drupal_clean_css_identifier($caption)), 'class' => 'download-count-table')));
+    $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => $caption, 'sticky' => FALSE, 'attributes' => array('id' => 'download-count-' . strtolower(drupal_clean_css_identifier($caption)), 'class' => 'download-count-details download-count-table')));
 
-    return $output;
+    return array ('output' => $output, 'values' => $values);
 }

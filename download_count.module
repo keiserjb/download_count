@@ -104,6 +104,21 @@ function download_count_entry_load($dcid) {
 }
 
 /**
+ * Implements hook_library().
+ */
+function download_count_library() {
+  $libraries['jquery.sparkline'] = array(
+    'title' => 'jquery sparkline',
+    'website' => 'http://www.omnipotent.net/jquery.sparkline/',
+    'version' => '1.6',
+    'js' => array(
+      libraries_get_path('jquery.sparkline', FALSE) . '/jquery.sparkline.min.js' => array(),
+    ),
+  );
+  return $libraries;
+}
+
+/**
  * Implements hook_file_download_access_alter().
  */
 function download_count_file_download_access_alter(&$grants, $file, $entity_type, $entity) {

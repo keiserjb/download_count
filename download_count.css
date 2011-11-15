@@ -7,9 +7,6 @@
   margin-left: 0.5em;
   padding-left: 0.5em;
 }
-table.download-count-table td {
-  width: 50%;
-}
 table.download-count-table th {
   font-weight: bold
 }
@@ -17,4 +14,23 @@ table.download-count-table caption {
   font-weight: bold;
   font-size: 1.3em;
   padding: 2em 0 1em 0;
+}
+table.download-count-details {
+  width: 50%;
+}
+table.download-count-details th.number {
+  width: 10%;
+}
+table.download-count-details th.range {
+  width: 45%;
+}
+table.download-count-details th.count {
+  width: 45%;
+}
+table.download-count-details td,
+table.download-count-details th {
+  text-align: center;
+}
+#download-count-total-bottom {
+  padding-top: 2em;
 }

@@ -9,7 +9,7 @@
  * Download_count export form.
  */
 function download_count_export_form($form, $form_state, $dc_entry = NULL) {
-  drupal_add_js(drupal_get_path('module', 'download_count') . '/download_count.js');
+  drupal_add_js(drupal_get_path('module', 'download_count') . '/js/download_count.js');
   if ($dc_entry == 'all') {
     drupal_set_title(t('Download Count Export CSV - All Files'));
   }

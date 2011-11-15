@@ -27,7 +27,7 @@ function download_count_admin_settings($form, &$form_state) {
   );
   $form['download count page'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Download count page settings'),
+    '#title' => t('Report page options'),
     '#description' => t('Settings for <a href="@page">this</a> page.', array('@page' => url('admin/reports/download-count'))),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -67,18 +67,95 @@ function download_count_admin_settings($form, &$form_state) {
     '#default_value' => isset($footer['value']) ? $footer['value'] : NULL,
     '#description' => t('Text to appear underneath the download count table.'),
   );
-  $form['download_count_cache_clear'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Clear Download Count Cache'),
-    '#description' => '<p>' . t('This will delete the cached download count data from the database. It will be rebuilt during drupal cron runs.<br /><strong>Note:</strong> This will affect the details pages until the data has been rebuilt.') . '</p>',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+  $form['details'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Details Page Options'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+  $form['details']['download_count_details_daily_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of days to display on the details page.'),
+    '#size' => 10,
+    '#default_value' => variable_get('download_count_details_daily_limit', 30),
   );
-  $form['download_count_cache_clear']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Clear Cache'),
-    '#submit' => array('download_count_clear_submit'),
+  $form['details']['download_count_details_weekly_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of weekss to display on the details page.'),
+    '#size' => 10,
+    '#default_value' => variable_get('download_count_details_weekly_limit', 25),
   );
+  $form['details']['download_count_details_monthly_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of months to display on the details page.'),
+    '#size' => 10,
+    '#default_value' => variable_get('download_count_details_monthly_limit', 12),
+  );
+  $form['details']['download_count_details_yearly_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of years to display on the details page.'),
+    '#size' => 10,
+    '#default_value' => variable_get('download_count_details_yearly_limit', 5),
+  );
+  if (module_exists('libraries')) {
+    $plugin = file_exists(libraries_get_path('jquery.sparkline') . '/jquery.sparkline.min.js');
+    $form['details']['sparklines'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Sparkline Options'),
+      '#description' => $plugin ? '<p>' . t('The jquery sparkline plugin is available at: /') . libraries_get_path('jquery.sparkline') . '/jquery.sparkline.min.js</p>' : '<p><em><span style="color: #A50000;">' . t('This option requires the jquery.sparkline.min.js plugin which is unavailable-- you can download it at <a href="http://omnipotent.net/jquery.sparkline">http://omnipotent.net/jquery.sparkline</a>.') . '</span></em></p>',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['details']['sparklines']['download_count_sparklines'] = array(
+      '#type' => 'select',
+      '#title' => t('Sparklines'),
+      '#default_value' => variable_get('download_count_sparklines', 'line'),
+      '#options' => array(
+        'none' => t('None'),
+        'line' => t('Line'),
+        'bar' => t('Bar'),
+      ),
+      '#disabled' => !$plugin,
+      '#description' => 'Enable sparklines and select type.',
+    );
+    $form['details']['sparklines']['download_count_sparkline_min'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Chart Minimum Value'),
+      '#size' => 8,
+      '#default_value' => variable_get('download_count_sparkline_min', '0'),
+      '#disabled' => !$plugin,
+      '#description' => 'Specify the minimum value to use for the range of the chart (starting point).',
+    );
+    $form['details']['sparklines']['download_count_sparkline_height'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Chart Height'),
+      '#size' => 8,
+      '#default_value' => variable_get('download_count_sparkline_height', '150px'),
+      '#disabled' => !$plugin,
+      '#description' => 'The height of the sparkline graph. May be any valid css height (ie 1.5em, 20px, etc). Must include units.',
+    );
+    $form['details']['sparklines']['download_count_sparkline_width'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Chart Width'),
+      '#size' => 8,
+      '#default_value' => variable_get('download_count_sparkline_width', '300px'),
+      '#disabled' => !$plugin,
+      '#description' => 'The width of the sparkline graph. May be any valid css width (ie 1.5em, 20px, etc). Must include units.',
+    );
+    $form['download_count_cache_clear'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Clear Download Count Cache'),
+      '#description' => '<p>' . t('This will delete the cached download count data from the database. It will be rebuilt during drupal cron runs.<br /><strong>Note:</strong> This will affect the details pages until the data has been rebuilt.') . '</p>',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['download_count_cache_clear']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Clear Cache'),
+      '#submit' => array('download_count_clear_submit'),
+    );
+  }
+
   return system_settings_form($form);
 }
 
