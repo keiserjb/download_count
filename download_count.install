@@ -121,7 +121,7 @@ function download_count_schema() {
         'default' => 0,
       ),
     ),
-    'primary key' => array('fid', 'type', 'id', 'date'),
+    'primary key' => array('dcc_id'),
     'indexes' => array(
       'dcc_fid' => array('fid'),
       'dcc_type' => array('type'),

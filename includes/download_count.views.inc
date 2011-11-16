@@ -58,8 +58,8 @@ function download_count_views_data() {
 
   // fid
   $data['download_count']['fid'] = array(
-    'title' => t('File ID'),
-    'help' => t('The File ID of the downloaded file.'),
+    'title' => t('File'),
+    'help' => t('The file information of the downloaded file.'),
     'relationship' => array(
       'base' => 'file_managed',
       'base field' => 'fid',
