@@ -79,7 +79,7 @@ function download_count_schema() {
 
   $schema['download_count_cache'] = array(
     'fields' => array(
-      'dc_cache_id' => array(
+      'dcc_id' => array(
         'description' => 'Primary Key: Unique download count cache id.',
         'type' => 'serial',
         'unsigned' => TRUE,

@@ -97,6 +97,16 @@ function download_count_menu() {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function download_count_views_api() {
+  return array(
+    'api' => 3.0,
+    'path' => drupal_get_path('module', 'download_count') . '/includes',
+  );
+}
+
+/**
  * Menu wildcard loader.
  */
 function download_count_entry_load($dcid) {

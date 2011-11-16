@@ -145,7 +145,7 @@ function download_count_admin_settings($form, &$form_state) {
     $form['download_count_cache_clear'] = array(
       '#type' => 'fieldset',
       '#title' => t('Clear Download Count Cache'),
-      '#description' => '<p>' . t('This will delete the cached download count data from the database. It will be rebuilt during drupal cron runs.<br /><strong>Note:</strong> This will affect the details pages until the data has been rebuilt.') . '</p>',
+      '#description' => '<p>' . t('This will delete the cached download count data from the database. It will be rebuilt during drupal cron runs.<br /><strong>Note:</strong> This will affect the details page until the data has been rebuilt.') . '</p>',
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
     );
