@@ -85,7 +85,7 @@ function download_count_views_data() {
     'title' => t('Entity Type'),
     'help' => t('The type of the entity from which the file was downloaded.'),
     'field' => array(
-      'handler' => 'views_handler_field_string',
+      'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
     'filter' => array(
