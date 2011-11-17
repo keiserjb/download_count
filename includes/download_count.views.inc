@@ -21,14 +21,14 @@ function download_count_views_data() {
   // add joins for each entity
   foreach (entity_get_info() as $entity_type => $info) {
     $data['download_count']['table']['join'][$info['base table']] = array(
-      'left_field' => $info['entity keys']['id'], 
-      'field' => 'id', 
-      'type' => 'LEFT', 
+      'left_field' => $info['entity keys']['id'],
+      'field' => 'id',
+      'type' => 'LEFT',
       'extra' => array(
         array(
-          'table' => 'download_count', 
-          'field' => 'type', 
-          'value' => $entity_type, 
+          'table' => 'download_count',
+          'field' => 'type',
+          'value' => $entity_type,
           'operator' => '=',
         ),
       ),
@@ -125,7 +125,7 @@ function download_count_views_data() {
     'field' => array(
       'handler' => 'views_handler_field_url',
       'click sortable' => TRUE,
-     ),
+    ),
     'filter' => array(
       'handler' => 'views_handler_filter_string',
     ),
@@ -141,7 +141,7 @@ function download_count_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
     'filter' => array(
       'handler' => 'views_handler_filter_string',
     ),

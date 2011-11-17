@@ -19,8 +19,8 @@ function download_count_export_form($form, $form_state, $dc_entry = NULL) {
 
   $form['download_count_export_note'] = array(
     '#prefix' => '<div id="download-count-export-note">',
-    '#suffix' => '</div>', 
-    '#markup' => l(t('&#0171; Back to summary'), 'admin/reports/download-count', array ('html' => true))
+    '#suffix' => '</div>',
+    '#markup' => l(t('&#0171; Back to summary'), 'admin/reports/download-count', array('html' => TRUE))
       . '<br /><br />'
       . t('The following data will be exported:')
       . '<ul>'
@@ -29,7 +29,7 @@ function download_count_export_form($form, $form_state, $dc_entry = NULL) {
       . '<li>' . t('File name')
       . '<li>' . t('File size')
       . '<li>' . t('Entity type')
-      . '<li>' . t('Entity id ')
+      . '<li>' . t('Entity id')
       . '<li>' . t('Downloading user id')
       . '<li>' . t('Downloading username')
       . '<li>' . t('Downloading user ip address')

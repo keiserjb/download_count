@@ -36,7 +36,7 @@ function download_count_view_page($arg = NULL) {
       'data' => t('Entity Type'),
       'field' => t('type'),
     ),
-     array(
+    array(
       'data' => t('Entity ID'),
       'field' => t('id'),
     ),
@@ -59,7 +59,7 @@ function download_count_view_page($arg = NULL) {
   );
 
   $query = db_select('download_count', 'dc')
-    ->fields('dc', array('dcid', 'type','id'))
+    ->fields('dc', array('dcid', 'type', 'id'))
     ->fields('f', array('filename', 'fid', 'filesize', 'uri'))
     ->groupBy('dc.type')
     ->groupBy('dc.id')
@@ -71,7 +71,7 @@ function download_count_view_page($arg = NULL) {
   if ($limit > 0) {
     $query->range(0, $limit);
   }
-  
+
   if ($items_per_page > 0) {
     $query = $query->extend('PagerDefault')->limit($items_per_page);
   }
@@ -84,9 +84,9 @@ function download_count_view_page($arg = NULL) {
     $row[] = $item;
     $row[] = number_format($file->count);
     $row[] = $file->fid;
-    $row[] = $file->type;
+    $row[] = check_plain($file->type);
     $row[] = $file->id;
-    $row[] = $file->filename;
+    $row[] = check_plain($file->filename);
     $row[] = format_size($file->filesize);
     $row[] = format_size($file->count * $file->filesize);
     $row[] = t('@time ago', array('@time' => format_interval(REQUEST_TIME - $file->last)));
@@ -130,7 +130,7 @@ function download_count_view_page($arg = NULL) {
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'download-count-table')));
   $output .= '<div id="download-count-total-bottom">' . t('Total Downloads:') . ' ' . number_format($total_downloads) . '</div>';
   if ($items_per_page > 0) {
-    $output .= theme('pager',array('tags' => array()));
+    $output .= theme('pager', array('tags' => array()));
   }
   if (!empty($page_footer['value'])) {
     $output .= '<div id="download-count-footer">' . check_markup($page_footer['value'], $page_footer['format']) . '</div>';
@@ -152,7 +152,7 @@ function download_count_reset_form($form, $form_state, $dc_entry = NULL) {
     );
     $form['filename'] = array(
       '#type' => 'value',
-      '#value' => $dc_entry->filename,
+      '#value' => check_plain($dc_entry->filename),
     );
     $form['fid'] = array(
       '#type' => 'value',
@@ -160,7 +160,7 @@ function download_count_reset_form($form, $form_state, $dc_entry = NULL) {
     );
     $form['type'] = array(
       '#type' => 'value',
-      '#value' => $dc_entry->type,
+      '#value' => check_plain($dc_entry->type),
     );
     $form['id'] = array(
       '#type' => 'value',
@@ -238,7 +238,7 @@ function download_count_reset_form_submit($form, &$form_state) {
 function download_count_view_details($dc_entry = NULL) {
   drupal_add_css(drupal_get_path('module', 'download_count') . '/download_count.css');
   $last_cron = variable_get('download_count_last_cron', 0);
-  $output = l(t('&#0171; Back to summary'), 'admin/reports/download-count', array ('html' => true));
+  $output = l(t('&#0171; Back to summary'), 'admin/reports/download-count', array('html' => TRUE));
 
   if ($dc_entry == 'all') {
     drupal_set_title(t('Download Count Details - All Files'));
@@ -246,10 +246,10 @@ function download_count_view_details($dc_entry = NULL) {
   }
   else {
     drupal_set_title(t('Download Count Details - @filename from @type @id', array('@filename' => $dc_entry->filename, '@type' => $dc_entry->type, '@id' => $dc_entry->id)));
-    $total = number_format(db_query('SELECT SUM(count) FROM {download_count_cache} WHERE type = :type AND id = :id AND fid = :fid', array (':type' => $dc_entry->type, ':id' => $dc_entry->id, ':fid' => $dc_entry->fid))->fetchField());
+    $total = number_format(db_query('SELECT SUM(count) FROM {download_count_cache} WHERE type = :type AND id = :id AND fid = :fid', array(':type' => $dc_entry->type, ':id' => $dc_entry->id, ':fid' => $dc_entry->fid))->fetchField());
   }
-  
-  
+
+
   if ($last_cron > 0) {
     $output .= '<p>Current as of ' . format_date($last_cron, 'long') . ' with ' . number_format(DrupalQueue::get('download_count')->numberOfItems()) . ' items still queued to cache.</p>';
   }
@@ -271,7 +271,7 @@ function download_count_view_details($dc_entry = NULL) {
 
   //base query for all files for all intervals
   $query = db_select('download_count_cache')
-    ->fields(NULL,array('date'))
+    ->fields(NULL, array('date'))
     ->groupBy('range');
   $query->addExpression('SUM(count)', 'count');
   $query->orderBy('date', 'DESC');
@@ -376,7 +376,7 @@ function _download_count_details_table($result, $caption, $range) {
       $rows[] = $row;
       $count++;
     }
-    $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => $caption, 'sticky' => FALSE, 'attributes' => array('id' => 'download-count-' . strtolower(drupal_clean_css_identifier($caption)), 'class' => 'download-count-details download-count-table')));
+    $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => $caption, 'sticky' => FALSE, 'attributes' => array('id' => 'download-count-' . drupal_strtolower(drupal_clean_css_identifier($caption)), 'class' => 'download-count-details download-count-table')));
 
-    return array ('output' => $output, 'values' => $values);
+    return array('output' => $output, 'values' => $values);
 }

@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * @file
+ * Rules specific functions for the download_count module.
+ */
+
 /**
  * Implements hook_rules_event_info().
  */
