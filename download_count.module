@@ -62,6 +62,7 @@ function download_count_menu() {
   );
   $items['admin/reports/download-count'] = array(
     'title' => 'Download Counts',
+    'description' => 'Download history of files attached to private core file fields.',
     'page callback' => 'download_count_view_page',
     'page arguments' => array('download_count'),
     'access arguments' => array('view download counts'),
@@ -216,7 +217,7 @@ function download_count_cache_processor($record) {
   db_merge('download_count_cache')
     ->key(array('type' => $record->type, 'id' => $record->id, 'fid' => $record->fid, 'date' => $record->date,))
     ->fields(array(
-      'count' => $record->count,
+        'count' => $record->count,
       ))
     ->expression('count', 'count + :inc', array(':inc' => $record->count))
     ->execute();

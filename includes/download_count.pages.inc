@@ -106,7 +106,7 @@ function download_count_view_page($arg = NULL) {
   if (empty($rows)) {
     $rows[] = array(array(
         'data' => t('No files have been downloaded.'),
-        'colspan' => '4',
+        'colspan' => '9',
       ));
   }
 
@@ -338,7 +338,7 @@ function download_count_view_details($dc_entry = NULL) {
       'type' => $sparkline_type,
       'min' => variable_get('download_count_sparkline_min', '0'),
       'height' => variable_get('download_count_sparkline_height', '150px'),
-      'width' => variable_get('download_count_sparkline_width', '300px'),
+      'width' => variable_get('download_count_sparkline_width', '50%'),
     );
     drupal_add_js($settings, array('type' => 'setting'));
   }

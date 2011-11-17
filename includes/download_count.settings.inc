@@ -138,7 +138,7 @@ function download_count_admin_settings($form, &$form_state) {
       '#type' => 'textfield',
       '#title' => t('Chart Width'),
       '#size' => 8,
-      '#default_value' => variable_get('download_count_sparkline_width', '300px'),
+      '#default_value' => variable_get('download_count_sparkline_width', '50%'),
       '#disabled' => !$plugin,
       '#description' => 'The width of the sparkline graph. May be any valid css width (ie 1.5em, 20px, etc). Must include units.',
     );
