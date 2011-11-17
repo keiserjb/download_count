@@ -290,9 +290,9 @@ function download_count_view_details($dc_entry = NULL) {
   $result = $query->execute();
   $daily =  _download_count_details_table($result, 'Daily', 'Day');
   $output .= $daily['output'];
-  $values['daily'] = implode(',', $daily['values']);
   if ($sparkline_type != 'none') {
-      $output .= '<div class="download-count-sparkline-daily">' . t('Rendering Sparkline...') . '</div>';
+    $values['daily'] = implode(',', array_reverse($daily['values']));
+    $output .= '<div class="download-count-sparkline-daily">' . t('Rendering Sparkline...') . '</div>';
   }
 
 
@@ -302,9 +302,9 @@ function download_count_view_details($dc_entry = NULL) {
   $result = $query->execute();
   $weekly = _download_count_details_table($result, 'Weekly', 'Week');
   $output .= $weekly['output'];
-  $values['weekly'] = implode(',', $weekly['values']);
   if ($sparkline_type != 'none') {
-      $output .= '<div class="download-count-sparkline-weekly">' . t('Rendering Sparkline...') . '</div>';
+    $values['weekly'] = implode(',', array_reverse($weekly['values']));
+    $output .= '<div class="download-count-sparkline-weekly">' . t('Rendering Sparkline...') . '</div>';
   }
 
   // monthly data
@@ -313,9 +313,9 @@ function download_count_view_details($dc_entry = NULL) {
   $result = $query->execute();
   $monthly = _download_count_details_table($result, 'Monthly', 'Month');
   $output .= $monthly['output'];
-  $values['monthly'] = implode(',', $monthly['values']);
   if ($sparkline_type != 'none') {
-      $output .= '<div class="download-count-sparkline-monthly">' . t('Rendering Sparkline...') . '</div>';
+    $values['monthly'] = implode(',', array_reverse($monthly['values']));
+    $output .= '<div class="download-count-sparkline-monthly">' . t('Rendering Sparkline...') . '</div>';
   }
 
   // yearly data
@@ -324,9 +324,9 @@ function download_count_view_details($dc_entry = NULL) {
   $result = $query->execute();
   $yearly = _download_count_details_table($result, 'Yearly', 'Year');
   $output .= $yearly['output'];
-  $values['yearly'] = implode(',', $yearly['values']);
   if ($sparkline_type != 'none') {
-      $output .= '<div class="download-count-sparkline-yearly">' . t('Rendering Sparkline...') . '</div>';
+    $values['yearly'] = implode(',', array_reverse($yearly['values']));
+    $output .= '<div class="download-count-sparkline-yearly">' . t('Rendering Sparkline...') . '</div>';
   }
   $output .= '<div id="download-count-total-bottom"><strong>' . t('Total Downloads:') . '</strong> ' . $total . '</div>';
 
@@ -350,33 +350,32 @@ function download_count_view_details($dc_entry = NULL) {
  * Create and output details table.
  */
 function _download_count_details_table($result, $caption, $range) {
-    $header = array(
-      array(
-        'data' => t('#'),
-        'class' => 'number',
-      ),
-      array(
-        'data' => t($range),
-        'class' => 'range',
-      ),
-      array(
-        'data' => t('Downloads'),
-        'class' => 'count',
-      ),
-    );
-    $count = 1;
-    $rows = array();
-    $values = array();
-    foreach ($result as $download) {
-      $row = array();
-      $row[] = $count;
-      $row[] = $download->range;
-      $row[] = number_format($download->count);
-      $values[] = $download->count;
-      $rows[] = $row;
-      $count++;
-    }
-    $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => $caption, 'sticky' => FALSE, 'attributes' => array('id' => 'download-count-' . drupal_strtolower(drupal_clean_css_identifier($caption)), 'class' => 'download-count-details download-count-table')));
-
-    return array('output' => $output, 'values' => $values);
+  $header = array(
+    array(
+      'data' => t('#'),
+      'class' => 'number',
+    ),
+    array(
+      'data' => t($range),
+      'class' => 'range',
+    ),
+    array(
+      'data' => t('Downloads'),
+      'class' => 'count',
+    ),
+  );
+  $count = 1;
+  $rows = array();
+  $values = array();
+  foreach ($result as $download) {
+    $row = array();
+    $row[] = $count;
+    $row[] = $download->range;
+    $row[] = number_format($download->count);
+    $values[] = $download->count;
+    $rows[] = $row;
+    $count++;
+  }
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => $caption, 'sticky' => FALSE, 'attributes' => array('id' => 'download-count-' . drupal_strtolower(drupal_clean_css_identifier($caption)), 'class' => 'download-count-details download-count-table')));
+  return array('output' => $output, 'values' => $values);
 }
