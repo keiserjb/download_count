@@ -140,6 +140,15 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
     return;
   }
 
+  //check flood control
+  $flood_limit = variable_get('download_count_flood_limit', 0);
+  if ($flood_limit > 0) {
+    $flood_window = variable_get('download_count_flood_window', 5);
+    if (!flood_is_allowed('download_count-fid_' . $file['fid'], $flood_limit, $flood_window)) {
+      return;
+    }
+  }
+
   //validate file has extension that should be counted, if not return.
   $extensions = explode(' ', drupal_strtolower(trim(variable_get('download_count_excluded_file_extensions', 'jpg jpeg gif png'))));
   if (count($extensions)) {
@@ -166,6 +175,7 @@ function download_count_file_download_access_alter(&$grants, $file, $entity_type
     'timestamp' => $time,
   ))
   ->execute();
+  flood_register_event('download_count-fid_' . $file['fid'], 3600);
   watchdog('download_count', '%file was downloaded by user #%uid from %ip', array('%file' => $file['filename'], '%uid' => $user->uid, '%ip' => $ip), WATCHDOG_NOTICE);
 
   if (module_exists('rules')) {

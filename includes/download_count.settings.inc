@@ -81,7 +81,7 @@ function download_count_admin_settings($form, &$form_state) {
   );
   $form['details']['download_count_details_weekly_limit'] = array(
     '#type' => 'textfield',
-    '#title' => t('Number of weekss to display on the details page.'),
+    '#title' => t('Number of weeks to display on the details page.'),
     '#size' => 10,
     '#default_value' => variable_get('download_count_details_weekly_limit', 25),
   );
@@ -141,6 +141,26 @@ function download_count_admin_settings($form, &$form_state) {
       '#default_value' => variable_get('download_count_sparkline_width', '50%'),
       '#disabled' => !$plugin,
       '#description' => 'The width of the sparkline graph. May be any valid css width (ie 1.5em, 20px, etc). Must include units.',
+    );
+    $form['download_count_flood_control'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Flood Control Settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['download_count_flood_control']['download_count_flood_limit'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Flood control limit'),
+      '#size' => 10,
+      '#default_value' => variable_get('download_count_flood_limit', 0),
+      '#description' => 'Maximum number of times to count the file download per time window. Enter 0 for no flood control limits.',
+    );
+    $form['download_count_flood_control']['download_count_flood_window'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Flood control window'),
+      '#size' => 10,
+      '#default_value' => variable_get('download_count_flood_window', 5),
+      '#description' => 'Number of seconds in the time window for counting a file download.',
     );
     $form['download_count_cache_clear'] = array(
       '#type' => 'fieldset',
