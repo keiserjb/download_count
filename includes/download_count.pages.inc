@@ -272,7 +272,7 @@ function download_count_view_details($dc_entry = NULL) {
   //base query for all files for all intervals
   $query = db_select('download_count_cache')
     ->fields(NULL, array('date'))
-    ->groupBy('range');
+    ->groupBy('time_interval');
   $query->addExpression('SUM(count)', 'count');
   $query->orderBy('date', 'DESC');
   $expressions =& $query->getExpressions();
@@ -285,7 +285,7 @@ function download_count_view_details($dc_entry = NULL) {
   }
 
   // daily data
-  $query->addExpression("FROM_UNIXTIME(date, '%Y-%m-%d')", 'range');
+  $query->addExpression("FROM_UNIXTIME(date, '%Y-%m-%d')", 'time_interval');
   $query->range(0, variable_get('download_count_details_daily_limit', 30));
   $result = $query->execute();
   $daily =  _download_count_details_table($result, 'Daily', 'Day');
@@ -297,7 +297,7 @@ function download_count_view_details($dc_entry = NULL) {
 
 
   // weekly data
-  $expressions['range']['expression'] = "FROM_UNIXTIME(date, '$week_format')";
+  $expressions['time_interval']['expression'] = "FROM_UNIXTIME(date, '$week_format')";
   $query->range(0, variable_get('download_count_details_weekly_limit', 25));
   $result = $query->execute();
   $weekly = _download_count_details_table($result, 'Weekly', 'Week');
@@ -308,7 +308,7 @@ function download_count_view_details($dc_entry = NULL) {
   }
 
   // monthly data
-  $expressions['range']['expression'] = "FROM_UNIXTIME(date, '%Y-%m')";
+  $expressions['time_interval']['expression'] = "FROM_UNIXTIME(date, '%Y-%m')";
   $query->range(0, variable_get('download_count_details_monthly_limit', 12));
   $result = $query->execute();
   $monthly = _download_count_details_table($result, 'Monthly', 'Month');
@@ -319,7 +319,7 @@ function download_count_view_details($dc_entry = NULL) {
   }
 
   // yearly data
-  $expressions['range']['expression'] = "FROM_UNIXTIME(date, '%Y')";
+  $expressions['time_interval']['expression'] = "FROM_UNIXTIME(date, '%Y')";
   $query->range(0, variable_get('download_count_details_yearly_limit', 5));
   $result = $query->execute();
   $yearly = _download_count_details_table($result, 'Yearly', 'Year');
@@ -370,7 +370,7 @@ function _download_count_details_table($result, $caption, $range) {
   foreach ($result as $download) {
     $row = array();
     $row[] = $count;
-    $row[] = $download->range;
+    $row[] = $download->time_interval;
     $row[] = number_format($download->count);
     $values[] = $download->count;
     $rows[] = $row;
