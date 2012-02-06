@@ -17,11 +17,11 @@ function download_count_rules_event_info() {
       'variables' => array(
         'file' => array(
           'type' => 'file',
-          'label' => t('downloaded file'),
+          'label' => t('Downloaded file'),
         ),
         'user' => array(
           'type' => 'user',
-          'label' => t('downloading user'),
+          'label' => t('Downloading user'),
         ),
       ),
     ),
