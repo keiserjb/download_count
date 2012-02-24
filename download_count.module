@@ -5,6 +5,9 @@
  * Tracks file downloads for files stored in the drupal files table using the private files setting or custom private filefield.
  */
 
+// Load all Field module hooks for Audio.
+module_load_include('inc', 'download_count', 'includes/download_count.field');
+
 /**
  * Implements hook_help().
  */
@@ -319,4 +322,17 @@ function _download_count_block_contents($block) {
   if (count($rows)) {
     return theme('table', array('header' => $header, 'rows' => $rows, 'sticky' => FALSE));
   }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function download_count_theme() {
+  $theme= array(
+    'download_count_file_field_formatter' => array(
+    'variables' => array('file' => NULL),
+    'file' => 'includes/download_count.field.inc',
+    ),
+  );
+  return $theme;
 }
