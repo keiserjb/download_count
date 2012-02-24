@@ -5,7 +5,7 @@
  * Tracks file downloads for files stored in the drupal files table using the private files setting or custom private filefield.
  */
 
-// Load all Field module hooks for Audio.
+// Load all Field module hooks.
 module_load_include('inc', 'download_count', 'includes/download_count.field');
 
 /**
