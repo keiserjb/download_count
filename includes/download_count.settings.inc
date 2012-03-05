@@ -97,12 +97,18 @@ function download_count_admin_settings($form, &$form_state) {
     '#size' => 10,
     '#default_value' => variable_get('download_count_details_yearly_limit', 5),
   );
+
   if (module_exists('libraries')) {
-    $plugin = file_exists(libraries_get_path('jquery.sparkline') . '/jquery.sparkline.min.js');
+    $plugin = libraries_get_path('jquery.sparkline', FALSE) . '/jquery.sparkline.min.js';
+  } else {
+    $plugin = drupal_get_path('module', 'download_count') . '/jquery.sparkline.min.js';
+  }
+
+  if (file_exists($plugin)) {
     $form['details']['sparklines'] = array(
       '#type' => 'fieldset',
       '#title' => t('Sparkline Options'),
-      '#description' => $plugin ? '<p>' . t('The jquery sparkline plugin is available at: /') . libraries_get_path('jquery.sparkline') . '/jquery.sparkline.min.js</p>' : '<p><em><span style="color: #A50000;">' . t('This option requires the jquery.sparkline.min.js plugin which is unavailable-- you can download it at <a href="http://omnipotent.net/jquery.sparkline">http://omnipotent.net/jquery.sparkline</a>.') . '</span></em></p>',
+      '#description' => '<p>' . t('The jquery sparkline plugin is available at: /') . $plugin . '</p>',
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
     );
@@ -142,39 +148,40 @@ function download_count_admin_settings($form, &$form_state) {
       '#disabled' => !$plugin,
       '#description' => 'The width of the sparkline graph. May be any valid css width (ie 1.5em, 20px, etc). Must include units.',
     );
-    $form['download_count_flood_control'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Flood Control Settings'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-    $form['download_count_flood_control']['download_count_flood_limit'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Flood control limit'),
-      '#size' => 10,
-      '#default_value' => variable_get('download_count_flood_limit', 0),
-      '#description' => 'Maximum number of times to count the file download per time window. Enter 0 for no flood control limits.',
-    );
-    $form['download_count_flood_control']['download_count_flood_window'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Flood control window'),
-      '#size' => 10,
-      '#default_value' => variable_get('download_count_flood_window', 5),
-      '#description' => 'Number of seconds in the time window for counting a file download.',
-    );
-    $form['download_count_cache_clear'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Clear Download Count Cache'),
-      '#description' => '<p>' . t('This will delete the cached download count data from the database. It will be rebuilt during drupal cron runs.<br /><strong>Note:</strong> This will affect the details page until the data has been rebuilt.') . '</p>',
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-    $form['download_count_cache_clear']['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Clear Cache'),
-      '#submit' => array('download_count_clear_submit'),
-    );
   }
+
+  $form['download_count_flood_control'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Flood Control Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['download_count_flood_control']['download_count_flood_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Flood control limit'),
+    '#size' => 10,
+    '#default_value' => variable_get('download_count_flood_limit', 0),
+    '#description' => 'Maximum number of times to count the file download per time window. Enter 0 for no flood control limits.',
+  );
+  $form['download_count_flood_control']['download_count_flood_window'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Flood control window'),
+    '#size' => 10,
+    '#default_value' => variable_get('download_count_flood_window', 5),
+    '#description' => 'Number of seconds in the time window for counting a file download.',
+  );
+  $form['download_count_cache_clear'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Clear Download Count Cache'),
+    '#description' => '<p>' . t('This will delete the cached download count data from the database. It will be rebuilt during drupal cron runs.<br /><strong>Note:</strong> This will affect the details page until the data has been rebuilt.') . '</p>',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['download_count_cache_clear']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Clear Cache'),
+    '#submit' => array('download_count_clear_submit'),
+  );
 
   return system_settings_form($form);
 }
