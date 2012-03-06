@@ -18,21 +18,31 @@ function download_count_views_data() {
     'help' => t('Download history of download count module managed file downloads.'),
   );
 
-  // add joins for each entity
+  // join for files table
+  $data['download_count']['table']['join'] = array(
+    'file_managed' => array(
+      'field' => 'fid',
+      'left_field' => 'fid',
+    ),
+  );
+
+  // joins for fieldable entities
   foreach (entity_get_info() as $entity_type => $info) {
-    $data['download_count']['table']['join'][$info['base table']] = array(
-      'left_field' => $info['entity keys']['id'],
-      'field' => 'id',
-      'type' => 'LEFT',
-      'extra' => array(
-        array(
-          'table' => 'download_count',
-          'field' => 'type',
-          'value' => $entity_type,
-          'operator' => '=',
+    if ($info['fieldable']) {
+      $data['download_count']['table']['join'][$info['base table']] = array(
+        'left_field' => $info['entity keys']['id'],
+        'field' => 'id',
+        'type' => 'LEFT',
+        'extra' => array(
+          array(
+            'table' => 'download_count',
+            'field' => 'type',
+            'value' => $entity_type,
+            'operator' => '=',
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   // fields
