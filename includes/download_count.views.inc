@@ -19,11 +19,9 @@ function download_count_views_data() {
   );
 
   // join for files table
-  $data['download_count']['table']['join'] = array(
-    'file_managed' => array(
-      'field' => 'fid',
+  $data['download_count']['table']['join']['file_managed'] = array(
       'left_field' => 'fid',
-    ),
+      'field' => 'fid',
   );
 
   // joins for fieldable entities
@@ -59,7 +57,7 @@ function download_count_views_data() {
       'handler' => 'views_handler_filter_numeric',
     ),
     'sort' => array(
-      'handler' => 'views_handler_sort_numeric',
+      'handler' => 'views_handler_sort',
     ),
     'argument' => array(
       'handler' => 'views_handler_argument_numeric',
@@ -99,10 +97,10 @@ function download_count_views_data() {
       'click sortable' => TRUE,
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_string',
+      'handler' => 'views_handler_filter',
     ),
     'sort' => array(
-      'handler' => 'views_handler_sort_string',
+      'handler' => 'views_handler_sort',
     ),
     'argument' => array(
       'handler' => 'views_handler_argument_string',
@@ -121,7 +119,7 @@ function download_count_views_data() {
       'handler' => 'views_handler_filter_numeric',
     ),
     'sort' => array(
-      'handler' => 'views_handler_sort_numeric',
+      'handler' => 'views_handler_sort',
     ),
     'argument' => array(
       'handler' => 'views_handler_argument_numeric',
@@ -175,9 +173,18 @@ function download_count_views_data() {
       'handler' => 'views_handler_filter_date',
     ),
     'sort' => array(
-      'handler' => 'views_handler_sort',
+      'handler' => 'views_handler_sort_date',
     ),
   );
 
   return $data;
+}
+
+
+function download_count_views_data_alter(&$data) {
+  // join for files table
+  $data['file_managed']['table']['join']['download_count'] = array(
+      'left_field' => 'fid',
+      'field' => 'fid',
+  );
 }
