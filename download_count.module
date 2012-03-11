@@ -123,7 +123,8 @@ function download_count_entry_load($dcid) {
 function download_count_library() {
   if (module_exists('libraries')) {
     $path = libraries_get_path('jquery.sparkline', FALSE) . '/jquery.sparkline.min.js';
-  } else {
+  }
+  else {
     $path = drupal_get_path('module', 'download_count') . '/jquery.sparkline.min.js';
   }
 
@@ -331,7 +332,7 @@ function _download_count_block_contents($block) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function download_count_theme() {
   $theme= array(

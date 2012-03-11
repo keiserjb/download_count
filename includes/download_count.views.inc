@@ -24,25 +24,6 @@ function download_count_views_data() {
       'field' => 'fid',
   );
 
-  // joins for fieldable entities
-  foreach (entity_get_info() as $entity_type => $info) {
-    if ($info['fieldable']) {
-      $data['download_count']['table']['join'][$info['base table']] = array(
-        'left_field' => $info['entity keys']['id'],
-        'field' => 'id',
-        'type' => 'LEFT',
-        'extra' => array(
-          array(
-            'table' => 'download_count',
-            'field' => 'type',
-            'value' => $entity_type,
-            'operator' => '=',
-          ),
-        ),
-      );
-    }
-  }
-
   // fields
 
   // dc_id

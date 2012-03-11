@@ -100,7 +100,8 @@ function download_count_admin_settings($form, &$form_state) {
 
   if (module_exists('libraries')) {
     $plugin = libraries_get_path('jquery.sparkline', FALSE) . '/jquery.sparkline.min.js';
-  } else {
+  }
+  else {
     $plugin = drupal_get_path('module', 'download_count') . '/jquery.sparkline.min.js';
   }
 

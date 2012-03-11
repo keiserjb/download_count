@@ -3,7 +3,7 @@
  * @file
  * Implement a file field formatter that includes download count.
  */
- 
+
 /**
  * Implements hook_field_formatter_info().
  */
@@ -40,7 +40,7 @@ function download_count_field_formatter_view($entity_type, $entity, $field, $ins
 }
 
 /**
- * Theme function for file fields with download counts. 
+ * Theme function for file fields with download counts.
  * Mostly copied from the core file module.
  */
 function theme_download_count_file_field_formatter($variables) {
