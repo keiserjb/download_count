@@ -26,6 +26,10 @@ function download_count_permission() {
     'view download counts' => array(
       'title' => t('view download counts'),
     ),
+    'skip download counts' => array(
+      'title' => t('skip download counts'),
+      'description' => t('Don\'t count downloads for users with this role.'),
+    ),
     'reset download counts' => array(
       'title' => t('reset download counts'),
     ),
@@ -144,6 +148,11 @@ function download_count_library() {
  */
 function download_count_file_download_access_alter(&$grants, $file, $entity_type, $entity) {
   $time =  REQUEST_TIME;
+
+  //if role should be skipped, return.
+  if (user_access('skip download counts')) {
+    return;
+  }
 
   //if no access, simply return.
   if (!in_array(TRUE, $grants)) {
