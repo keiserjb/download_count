@@ -203,11 +203,11 @@ function download_count_reset_form_submit($form, &$form_state) {
     if ($result) {
       db_truncate('download_count_cache')->execute();
       drupal_set_message(t('All download counts have been reset.'));
-      watchdog('download_count', 'All download counts have been reset.', WATCHDOG_NOTICE);
+      watchdog('download_count', 'All download counts have been reset.', array(), WATCHDOG_NOTICE);
     }
     else {
       drupal_set_message(t('Unable to reset all download counts.'), 'error');
-      watchdog('download_count', 'Unable to reset all download counts.', WATCHDOG_ERROR);
+      watchdog('download_count', 'Unable to reset all download counts.', array(), WATCHDOG_ERROR);
     }
   }
   else {
