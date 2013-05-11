@@ -65,6 +65,7 @@ function download_count_view_page($arg = NULL) {
     ->groupBy('dc.id')
     ->groupBy('dc.fid');
   $query->addExpression('COUNT(dc.dcid)', 'count');
+  $query->addExpression('COUNT(dc.dcid) * f.filesize', 'total-size');
   $query->addExpression('MAX(dc.timestamp)', 'last');
   $query->join('file_managed', 'f', 'dc.fid = f.fid');
 
