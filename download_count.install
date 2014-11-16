@@ -44,11 +44,10 @@ function download_count_schema() {
         'default' => 0,
       ),
       'ip_address' => array(
-        'description' => "The ip address of the downloading user.",
+        'description' => "The IP address of the downloading user.",
         'type' => 'varchar',
         'length' => 128,
         'not null' => TRUE,
-        'default' => 0,
       ),
       'referrer' => array(
         'description' => 'Referrer URI.',
@@ -163,8 +162,21 @@ function download_count_uninstall() {
 function download_count_update_7300() {
   db_change_field('download_count', 'referrer', 'referrer',
   array(
-  'description' => 'Referrer URI.',
-  'type' => 'text',
-  'not null' => TRUE,
+    'description' => 'Referrer URI.',
+    'type' => 'text',
+    'not null' => TRUE,
+  ));
+}
+
+/**
+ * Fix the default value of the ip_address field.
+ */
+function download_count_update_7301() {
+  db_change_field('download_count', 'ip_address', 'ip_address',
+  array(
+    'description' => "The IP address of the downloading user.",
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => TRUE,
   ));
 }
