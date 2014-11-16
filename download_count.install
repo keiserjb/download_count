@@ -52,10 +52,8 @@ function download_count_schema() {
       ),
       'referrer' => array(
         'description' => 'Referrer URI.',
-        'type' => 'varchar',
-        'length' => 255,
+        'type' => 'text',
         'not null' => TRUE,
-        'default' => '',
       ),
       'timestamp' => array(
         'description' => 'The date-time the file was downloaded.',
@@ -157,4 +155,16 @@ function download_count_uninstall() {
   variable_del('download_count_flood_limit');
   variable_del('download_count_flood_window');
   drupal_set_message(t('The download_count module has been uninstalled.'));
+}
+
+/**
+ * Change the referrer field to be text instead of varchar.
+ */
+function download_count_update_7300() {
+  db_change_field('download_count', 'referrer', 'referrer',
+  array(
+  'description' => 'Referrer URI.',
+  'type' => 'text',
+  'not null' => TRUE,
+  ));
 }
