@@ -1,5 +1,6 @@
 name = Download Count
 description = Tracks file downloads for Drupal private core file fields.
-core = 7.x
+backdrop = 1.x
+type = module
 dependencies[] = field
 dependencies[] = file

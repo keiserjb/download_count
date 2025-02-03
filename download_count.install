@@ -18,7 +18,7 @@ function download_count_schema() {
         'not null' => TRUE,
       ),
       'fid' => array(
-        'description' => 'The id from the drupal file_managed table of the file downloaded.',
+        'description' => 'The id from the backdrop file_managed table of the file downloaded.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -83,7 +83,7 @@ function download_count_schema() {
         'not null' => TRUE,
       ),
       'fid' => array(
-        'description' => t('The id from the drupal files table of the file downloaded.'),
+        'description' => t('The id from the backdrop files table of the file downloaded.'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -135,167 +135,102 @@ function download_count_schema() {
  * Implements hook_uninstall().
  */
 function download_count_uninstall() {
-  variable_del('download_count_excluded_file_extensions');
-  variable_del('download_count_view_page_limit');
-  variable_del('download_count_view_page_items');
-  variable_del('download_count_view_page_title');
-  variable_del('download_count_view_page_header');
-  variable_del('download_count_view_page_footer');
-  variable_del('download_count_export_range');
-  variable_del('download_count_sparklines');
-  variable_del('download_count_sparkline_min');
-  variable_del('download_count_sparkline_height');
-  variable_del('download_count_sparkline_width');
-  variable_del('download_count_last_cron');
-  variable_del('download_count_details_daily_limit');
-  variable_del('download_count_details_weekly_limit');
-  variable_del('download_count_details_monthly_limit');
-  variable_del('download_count_details_yearly_limit');
-  variable_del('download_count_flood_limit');
-  variable_del('download_count_flood_window');
-  drupal_set_message(t('The download_count module has been uninstalled.'));
+  config_clear('download_count.settings', 'download_count_excluded_file_extensions');
+  config_clear('download_count.settings', 'download_count_view_page_limit');
+  config_clear('download_count.settings', 'download_count_view_page_items');
+  config_clear('download_count.settings', 'download_count_view_page_title');
+  config_clear('download_count.settings', 'download_count_view_page_header');
+  config_clear('download_count.settings', 'download_count_view_page_footer');
+  config_clear('download_count.settings', 'download_count_export_range');
+  config_clear('download_count.settings', 'download_count_sparklines');
+  config_clear('download_count.settings', 'download_count_sparkline_min');
+  config_clear('download_count.settings', 'download_count_sparkline_height');
+  config_clear('download_count.settings', 'download_count_sparkline_width');
+  config_clear('download_count.settings', 'download_count_last_cron');
+  config_clear('download_count.settings', 'download_count_details_daily_limit');
+  config_clear('download_count.settings', 'download_count_details_weekly_limit');
+  config_clear('download_count.settings', 'download_count_details_monthly_limit');
+  config_clear('download_count.settings', 'download_count_details_yearly_limit');
+  config_clear('download_count.settings', 'download_count_flood_limit');
+  config_clear('download_count.settings', 'download_count_flood_window');
+  backdrop_set_message(t('The download_count module has been uninstalled.'));
 }
 
 
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function download_count_update_7300() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function download_count_update_7301() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function download_count_update_7302() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function download_count_update_7303() { }
+
 /**
- * Alter download count table.
+ * Implements hook_update_last_removed().
  */
-function download_count_update_7300() {
-  // We do not want to create type field again after module installation.
-  if (!db_field_exists('download_count', 'type')) {
-    // Create type field.
-    $spec = array(
-      'description' => 'The name of the entity type to which the file was attached when downloaded.',
-      'type' => 'varchar',
-      'length' => 64,
-      'not null' => TRUE,
-      'default' => '',
-    );
-    db_add_field('download_count', 'type', $spec);
-
-    // Enter value to type field.
-    // In 6 version there we were storing node ids from where file has been
-    // downloaded.
-    // Hence, setting type field value to node for all entries.
-    $rows_updated = db_update('download_count')
-      ->fields(array(
-        'type' => 'node',
-      ))
-      ->execute();
-    drupal_set_message(t('Download types set for') . ' ' . $rows_updated . ' ' . t('rows'));
-  }
-
-  // There will be no nid field after module installation.
-  if (!db_field_exists('download_count', 'id') && db_field_exists('download_count', 'nid')) {
-    // Alter nid field of download_count table.
-    db_change_field('download_count', 'nid', 'id',
-      array(
-        'description' => 'The name of the entity type to which the file was attached when downloaded.',
-        'type' => 'varchar',
-        'length' => 64,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-      array(
-        'indexes' => array(
-          'dc_fid' => array('fid'),
-          'dc_uid' => array('uid'),
-          'dc_type' => array('type'),
-          'dc_id' => array('id'),
-          'dc_ip' => array('ip_address'),
-          'dc_timestamp' => array('timestamp'),
-          'dc_fid_type_id' => array('fid', 'type', 'id'),
-        ),
-      )
-    );
-  }
+function download_count_update_last_removed() {
+  return 7303;
 }
 
 /**
- * Create download count cache table.
+ * Migrate download_count variables to config.
  */
-function download_count_update_7301() {
-  // Do not create download_count_cache table after module installation.
-  if (!db_table_exists('download_count_cache')) {
-    $schema['download_count_cache'] = array(
-      'fields' => array(
-        'dcc_id' => array(
-          'description' => 'Primary Key: Unique download count cache id.',
-          'type' => 'serial',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'fid' => array(
-          'description' => t('The id from the drupal files table of the file downloaded.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-        'type' => array(
-          'description' => 'The name of the entity type to which the file was attached when downloaded.',
-          'type' => 'varchar',
-          'length' => 64,
-          'not null' => TRUE,
-          'default' => '',
-        ),
-        'id' => array(
-          'description' => 'The primary key of the entity to which the file was attached when downloaded.',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-        'date' => array(
-          'description' => t('The date the file was downloaded.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-        'count' => array(
-          'description' => t('Number of times a file was downloaded in one day.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-      ),
-      'primary key' => array('dcc_id'),
-      'indexes' => array(
-        'dcc_fid' => array('fid'),
-        'dcc_type' => array('type'),
-        'dcc_id' => array('id'),
-        'dcc_timestamp' => array('date'),
-        'dcc_fid_type_id' => array('fid', 'type', 'id', 'date'),
-      ),
-    );
+function download_count_update_1000() {
+  $config = config('download_count.settings');
+  $config->set('download_count_flood_limit', update_variable_get('download_count_flood_limit', '0'));
+  $config->set('download_count_flood_window', update_variable_get('download_count_flood_window', '5'));
+  $config->set('download_count_excluded_file_extensions', update_variable_get('download_count_excluded_file_extensions', 'jpg jpeg gif png'));
+  $config->set('download_count_last_cron', update_variable_get('download_count_last_cron', '0'));
+  $config->set('download_count_delta_block_limit', update_variable_get('download_count_delta_block_limit', 'dynamic variable in file /download_count/download_count.module line 272'));
+  $config->set('download_count_block_block_limit', update_variable_get('download_count_block_block_limit', 'dynamic variable in file /download_count/download_count.module line 307'));
+  $config->set('download_count_export_range', update_variable_get('download_count_export_range', '0'));
+  $config->set('download_count_view_page_title', update_variable_get('download_count_view_page_title', 'dynamic value in file /download_count/includes/download_count.settings.inc line 38'));
+  $config->set('download_count_view_page_limit', update_variable_get('download_count_view_page_limit', '0'));
+  $config->set('download_count_view_page_items', update_variable_get('download_count_view_page_items', '25'));
+  $config->set('download_count_view_page_header', update_variable_get('download_count_view_page_header', ''));
+  $config->set('download_count_view_page_footer', update_variable_get('download_count_view_page_footer', ''));
+  $config->set('download_count_sparklines', update_variable_get('download_count_sparklines', 'line'));
+  $config->set('download_count_details_daily_limit', update_variable_get('download_count_details_daily_limit', '30'));
+  $config->set('download_count_details_weekly_limit', update_variable_get('download_count_details_weekly_limit', '25'));
+  $config->set('download_count_details_monthly_limit', update_variable_get('download_count_details_monthly_limit', '12'));
+  $config->set('download_count_details_yearly_limit', update_variable_get('download_count_details_yearly_limit', '5'));
+  $config->set('download_count_sparkline_min', update_variable_get('download_count_sparkline_min', '0'));
+  $config->set('download_count_sparkline_height', update_variable_get('download_count_sparkline_height', '150px'));
+  $config->set('download_count_sparkline_width', update_variable_get('download_count_sparkline_width', '50%'));
+  $config->save();
 
-    db_create_table('download_count_cache', $schema['download_count_cache']);
-  }
+  update_variable_del('download_count_flood_limit');
+  update_variable_del('download_count_flood_window');
+  update_variable_del('download_count_excluded_file_extensions');
+  update_variable_del('download_count_last_cron');
+  update_variable_del('download_count_delta_block_limit');
+  update_variable_del('download_count_block_block_limit');
+  update_variable_del('download_count_export_range');
+  update_variable_del('download_count_view_page_title');
+  update_variable_del('download_count_view_page_limit');
+  update_variable_del('download_count_view_page_items');
+  update_variable_del('download_count_view_page_header');
+  update_variable_del('download_count_view_page_footer');
+  update_variable_del('download_count_sparklines');
+  update_variable_del('download_count_details_daily_limit');
+  update_variable_del('download_count_details_weekly_limit');
+  update_variable_del('download_count_details_monthly_limit');
+  update_variable_del('download_count_details_yearly_limit');
+  update_variable_del('download_count_sparkline_min');
+  update_variable_del('download_count_sparkline_height');
+  update_variable_del('download_count_sparkline_width');
 }
 
 /**
- * Change the referrer field to be text instead of varchar.
+ * Implements hook_install().
  */
-function download_count_update_7302() {
-  db_change_field('download_count', 'referrer', 'referrer',
-  array(
-    'description' => 'Referrer URI.',
-    'type' => 'text',
-    'not null' => TRUE,
-  ));
-}
-
-/**
- * Fix the default value of the ip_address field.
- */
-function download_count_update_7303() {
-  db_change_field('download_count', 'ip_address', 'ip_address',
-  array(
-    'description' => "The IP address of the downloading user.",
-    'type' => 'varchar',
-    'length' => 128,
-    'not null' => TRUE,
-  ));
+function download_count_install() {
+  // Dynamically generated variable data was detected.
+  // /download_count/download_count.module line 272
+  // /download_count/download_count.module line 307
+  // /download_count/includes/download_count.settings.inc line 38
 }

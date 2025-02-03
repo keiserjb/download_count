@@ -27,12 +27,22 @@ function download_count_field_formatter_view($entity_type, $entity, $field, $ins
   $access = user_access('view download counts');
 
   foreach ($items as $delta => $item) {
-    if ($access) {
-      $item['downloads'] = db_query("SELECT COUNT(fid) from {download_count} where fid = :fid AND type = :type AND id = :id", array(':fid' => $item['fid'], ':type' => $entity_type, ':id' => $entity->{$entity_info['entity keys']['id']}))->fetchField();
+    // Load the file using file_load() to ensure it's a File entity.
+    $file = file_load($item['fid']);
+
+    if ($file && $access) {
+      // Add the download count if the user has access.
+      $file->downloads = db_query("SELECT COUNT(fid) FROM {download_count} WHERE fid = :fid AND type = :type AND id = :id", array(
+        ':fid'  => $item['fid'],
+        ':type' => $entity_type,
+        ':id'   => $entity->{$entity_info['entity keys']['id']},
+      ))->fetchField();
     }
+
+    // Pass the properly loaded File object to the theme function.
     $element[$delta] = array(
       '#theme' => !$access ? 'file_link' : 'download_count_file_field_formatter',
-      '#file' => (object) $item,
+      '#file'  => $file,  // Now passing a valid File object.
     );
   }
 

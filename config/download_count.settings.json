@@ -1,0 +1,23 @@
+{
+    "_config_name": "download_count.settings",
+    "download_count_flood_limit": "0",
+    "download_count_flood_window": "5",
+    "download_count_excluded_file_extensions": "jpg jpeg gif png",
+    "download_count_last_cron": "0",
+    "download_count_delta_block_limit": "dynamic variable in file /download_count/download_count.module line 272",
+    "download_count_block_block_limit": "dynamic variable in file /download_count/download_count.module line 307",
+    "download_count_export_range": "0",
+    "download_count_view_page_title": "dynamic value in file /download_count/includes/download_count.settings.inc line 38",
+    "download_count_view_page_limit": "0",
+    "download_count_view_page_items": "25",
+    "download_count_view_page_header": "",
+    "download_count_view_page_footer": "",
+    "download_count_sparklines": "line",
+    "download_count_details_daily_limit": "30",
+    "download_count_details_weekly_limit": "25",
+    "download_count_details_monthly_limit": "12",
+    "download_count_details_yearly_limit": "5",
+    "download_count_sparkline_min": "0",
+    "download_count_sparkline_height": "150px",
+    "download_count_sparkline_width": "50%"
+}

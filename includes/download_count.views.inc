@@ -20,8 +20,8 @@ function download_count_views_data() {
 
   // join for files table
   $data['download_count']['table']['join']['file_managed'] = array(
-      'left_field' => 'fid',
-      'field' => 'fid',
+    'left_field' => 'fid',
+    'field' => 'fid',
   );
 
   // fields
@@ -88,7 +88,7 @@ function download_count_views_data() {
     ),
   );
 
-    // id (entity id)
+  // id (entity id)
   $data['download_count']['id'] = array(
     'title' => t('Entity ID'),
     'help' => t('The id of the entity from which the file was downloaded.'),
@@ -109,17 +109,17 @@ function download_count_views_data() {
 
   $fields_info = field_info_fields();
   $file_field_entity_types = array();
-  foreach($fields_info as $field_info) {
-    if($field_info['type'] == 'file') {
+  foreach ($fields_info as $field_info) {
+    if ($field_info['type'] == 'file') {
       $file_field_entity_types += array_keys($field_info['bundles']);
     }
   }
 
   $file_field_entity_types = array_unique($file_field_entity_types);
 
-  foreach($file_field_entity_types as $entity_type) {
+  foreach ($file_field_entity_types as $entity_type) {
     $entity_info = entity_get_info($entity_type);
-    if($entity_info['fieldable']) {
+    if ($entity_info['fieldable']) {
       if (isset($entity_info['base table'])) {
         $entity = $entity_info['label'];
         if ($entity == t('Node')) {
@@ -196,10 +196,14 @@ function download_count_views_data() {
 }
 
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function download_count_views_data_alter(&$data) {
   // join for files table
   $data['file_managed']['table']['join']['download_count'] = array(
-      'left_field' => 'fid',
-      'field' => 'fid',
+    'left_field' => 'fid',
+    'field' => 'fid',
   );
 }

@@ -9,12 +9,12 @@
  * Download_count export form.
  */
 function download_count_export_form($form, $form_state, $dc_entry = NULL) {
-  drupal_add_js(drupal_get_path('module', 'download_count') . '/js/download_count.js');
+  backdrop_add_js(backdrop_get_path('module', 'download_count') . '/js/download_count.js');
   if ($dc_entry == 'all') {
-    drupal_set_title(t('Download Count Export CSV - All Files'));
+    backdrop_set_title(t('Download Count Export CSV - All Files'));
   }
   else {
-    drupal_set_title(t('Download Count Export CSV - @filename from @type @id', array('@filename' => $dc_entry->filename, '@type' => $dc_entry->type, '@id' => $dc_entry->id)));
+    backdrop_set_title(t('Download Count Export CSV - @filename from @type @id', array('@filename' => $dc_entry->filename, '@type' => $dc_entry->type, '@id' => $dc_entry->id)));
   }
 
   $form['download_count_export_note'] = array(
@@ -44,7 +44,7 @@ function download_count_export_form($form, $form_state, $dc_entry = NULL) {
       t('export all data'),
       t('export data for a specified date range'),
     ),
-    '#default_value' => variable_get('download_count_export_range', 0),
+    '#default_value' => config_get('download_count.settings', 'download_count_export_range'),
   );
   $form['download_count_export_date_range_from'] = array(
     '#type' => 'date',
@@ -76,7 +76,7 @@ function download_count_export_form($form, $form_state, $dc_entry = NULL) {
  * Implements hook_submit().
  */
 function download_count_export_form_submit($form, &$form_state) {
-  variable_set('download_count_export_range', $form_state['values']['download_count_export_range']);
+  config_set('download_count.settings', 'download_count_export_range', $form_state['values']['download_count_export_range']);
   $filename = 'download_count_export_' . ($form_state['values']['download_count_file_info'] == 'all' ? 'all_files' : check_plain($form_state['values']['download_count_file_info']->filename)) . '_' . date('Y-m-d') . '.csv';
   $range = $form_state['values']['download_count_export_range'];
   $file_info =  $form_state['values']['download_count_file_info'];
@@ -84,15 +84,19 @@ function download_count_export_form_submit($form, &$form_state) {
   $end = $form_state['values']['download_count_export_date_range_to'];
 
   $result = download_count_export_data($filename, $range, $file_info, $start, $end);
-  drupal_set_message($filename . " has been successfully exported.", 'status');
+  backdrop_set_message($filename . " has been successfully exported.", 'status');
   return;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function download_count_export_data($filename, $range, $file_info, $start, $end) {
   ob_end_clean();
-  drupal_add_http_header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-  drupal_add_http_header('Content-Type', 'application/csv');
-  drupal_send_headers();
+  backdrop_add_http_header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+  backdrop_add_http_header('Content-Type', 'application/csv');
+  backdrop_send_headers();
 
   $query = db_select('download_count', 'dc')
     ->fields('dc', array('dcid', 'fid', 'type', 'id', 'uid', 'ip_address', 'referrer', 'timestamp'))

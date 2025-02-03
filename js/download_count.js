@@ -1,5 +1,5 @@
 (function ($) {
-  Drupal.behaviors.download_count = {
+  Backdrop.behaviors.download_count = {
     attach: function(context, settings) {
       $('#download-count-export-form div.form-item-download-count-export-date-range-from').hide();
       $('#download-count-export-form div.form-item-download-count-export-date-range-to').hide();
