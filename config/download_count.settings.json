@@ -3,7 +3,7 @@
     "download_count_flood_limit": "0",
     "download_count_flood_window": "5",
     "download_count_excluded_file_extensions": "jpg jpeg gif png",
-    "download_count_last_cron": "0",
+    "download_count_last_cron": 1739203593,
     "download_count_delta_block_limit": "5W",
     "download_count_block_block_limit": "5",
     "download_count_export_range": "0",
@@ -19,5 +19,7 @@
     "download_count_details_yearly_limit": "5",
     "download_count_sparkline_min": "0",
     "download_count_sparkline_height": "150px",
-    "download_count_sparkline_width": "50%"
+    "download_count_sparkline_width": "50%",
+    "download_count_top_files_block_limit": "5",
+    "download_count_recent_files_block_limit": "5"
 }
