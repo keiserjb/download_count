@@ -12,8 +12,8 @@ Bugs and feature requests should be reported in the [Issue Queue](https://github
 
 ## Current Maintainers
 
-[Justin Keiser](https://github.com/keiserjb)
-[Irina Zaks](https://github.com/irinaz)
+- [Justin Keiser](https://github.com/keiserjb)
+- [Irina Zaks](https://github.com/irinaz)
 
 ## Credits
 
