@@ -1,18 +1,20 @@
-(function ($) {
-  Backdrop.behaviors.download_count = {
-    attach: function(context, settings) {
-      $('#download-count-export-form div.form-item-download-count-export-date-range-from').hide();
-      $('#download-count-export-form div.form-item-download-count-export-date-range-to').hide();
+(function ($, once) {
+  Backdrop.behaviors.downloadCountExport = {
+    attach: function (context) {
+      once('download-count-export-toggle', '#download-count-export-form', context).forEach(function (form) {
+        $(form).find('div.form-item-download-count-export-date-range-from').hide();
+        $(form).find('div.form-item-download-count-export-date-range-to').hide();
 
-      $('input#edit-download-count-export-range-0').bind('click', function(){
-        $('#download-count-export-form div.form-item-download-count-export-date-range-from').hide();
-        $('#download-count-export-form div.form-item-download-count-export-date-range-to').hide();
-        }
-      )
+        $('input#edit-download-count-export-range-0', form).on('click', function () {
+          $(form).find('div.form-item-download-count-export-date-range-from').hide();
+          $(form).find('div.form-item-download-count-export-date-range-to').hide();
+        });
 
-      $('input#edit-download-count-export-range-1').bind('click', function(){
-        $('#download-count-export-form div.form-item-download-count-export-date-range-from').show();
-        $('#download-count-export-form div.form-item-download-count-export-date-range-to').show();
-        }
-      )
-}}})(jQuery);
+        $('input#edit-download-count-export-range-1', form).on('click', function () {
+          $(form).find('div.form-item-download-count-export-date-range-from').show();
+          $(form).find('div.form-item-download-count-export-date-range-to').show();
+        });
+      });
+    }
+  };
+})(jQuery, once);

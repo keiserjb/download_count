@@ -62,8 +62,6 @@ function download_count_view_page($arg = NULL) {
   $query = db_select('download_count', 'dc')
     ->fields('dc', array('dcid', 'type', 'id'))
     ->fields('f', array('filename', 'fid', 'filesize', 'uri'))
-    ->groupBy('dc.type')
-    ->groupBy('dc.id')
     ->groupBy('dc.fid');
   $query->addExpression('COUNT(dc.dcid)', 'count');
   $query->addExpression('COUNT(dc.dcid) * f.filesize', 'total-size');
@@ -107,9 +105,9 @@ function download_count_view_page($arg = NULL) {
 
   if (empty($rows)) {
     $rows[] = array(array(
-        'data' => t('No files have been downloaded.'),
-        'colspan' => '9',
-      ));
+      'data' => t('No files have been downloaded.'),
+      'colspan' => '9',
+    ));
   }
 
   if ($colspan > 1) {
@@ -235,117 +233,60 @@ function download_count_reset_form_submit($form, &$form_state) {
 }
 
 /**
- * Download_count details page callback.
+ * Implements page callback for download count details.
  */
 function download_count_view_details($dc_entry = NULL) {
   $config = config('download_count.settings');
   backdrop_add_css(backdrop_get_path('module', 'download_count') . '/download_count.css');
-  $last_cron = $config->get('download_count_last_cron');
-  $output = l(t('&#0171; Back to summary'), 'admin/reports/download-count', array('html' => TRUE));
 
-  if ($dc_entry == 'all') {
-    backdrop_set_title(t('Download Count Details - All Files'));
-    $total =  number_format(db_query('SELECT SUM(count) FROM {download_count_cache}')->fetchField());
-  }
-  else {
-    backdrop_set_title(t('Download Count Details - @filename from @type @id', array('@filename' => $dc_entry->filename, '@type' => $dc_entry->type, '@id' => $dc_entry->id)));
-    $total = number_format(db_query('SELECT SUM(count) FROM {download_count_cache} WHERE type = :type AND id = :id AND fid = :fid', array(':type' => $dc_entry->type, ':id' => $dc_entry->id, ':fid' => $dc_entry->fid))->fetchField());
-  }
+  // Set page title
+  backdrop_set_title($dc_entry == 'all'
+    ? t('Download Count Details - All Files')
+    : t('Download Count Details - @filename from @type @id', array('@filename' => $dc_entry->filename, '@type' => $dc_entry->type, '@id' => $dc_entry->id))
+  );
 
+  // Ensure Peity is loaded before our chart script
+  backdrop_add_js(backdrop_get_path('module', 'download_count') . '/js/peity-vanilla.min.js', 'file');
+  backdrop_add_js(backdrop_get_path('module', 'download_count') . '/js/download_count_chart.js', 'file');
 
-  if ($last_cron > 0) {
-    $output .= '<p>Current as of ' . format_date($last_cron, 'long') . ' with ' . number_format(BackdropQueue::get('download_count')->numberOfItems()) . ' items still queued to cache.</p>';
-  }
-  else {
-    $output .= '<p>No download count data has been cached. You may want to check Backdrop cron.</p>';
-  }
-
-  $output .= '<div id="download-count-total-top"><strong>' . t('Total Downloads:') . '</strong> ' . $total . '</div>';
-
-  // determine first day of week (from date module if set, 'Sunday' if not).
-  // TODO This variable was probably removed in Backdrop without replacement.
-  if (variable_get('date_first_day', '0') == 0) {
-    $week_format = '%U';
-  }
-  else {
-    $week_format = '%u';
-  }
-
-  $sparkline_type = $config->get('download_count_sparklines');
-
-  //base query for all files for all intervals
   $query = db_select('download_count_cache')
     ->fields(NULL, array('date'))
     ->groupBy('time_interval');
   $query->addExpression('SUM(count)', 'count');
   $query->orderBy('date', 'DESC');
-  $expressions = &$query->getExpressions();
 
-  // Details for a specific download and entity.
-  if ($dc_entry != 'all') {
-    $query->condition('type', $dc_entry->type, '=');
-    $query->condition('id', $dc_entry->id, '=');
-    $query->condition('fid', $dc_entry->fid, '=');
-  }
-
-  // daily data
+  // Daily Data
   $query->addExpression("FROM_UNIXTIME(date, '%Y-%m-%d')", 'time_interval');
   $query->range(0, $config->get('download_count_details_daily_limit'));
   $result = $query->execute();
-  $daily =  _download_count_details_table($result, 'Daily', 'Day');
-  $output .= $daily['output'];
-  if ($sparkline_type != 'none') {
-    $values['daily'] = implode(',', array_reverse($daily['values']));
-    $output .= '<div class="download-count-sparkline-daily">' . t('Rendering Sparkline...') . '</div>';
+  $daily = _download_count_details_table($result, 'Daily', 'Day');
+
+  if (!is_array($daily) || !isset($daily['values'])) {
+    watchdog('download_count', 'Unexpected return value from _download_count_details_table()', [], WATCHDOG_WARNING);
+    $daily['values'] = []; // Ensure it's an array to prevent further errors
   }
 
+  $output = $daily['output'];
+  $values['daily'] = !empty($daily['values']) ? implode(',', array_reverse($daily['values'])) : '0';
+  $output .= '<div class="peity-data" data-values="' . $values['daily'] . '"></div>';
 
-  // weekly data
-  $expressions['time_interval']['expression'] = "FROM_UNIXTIME(date, '$week_format')";
+  // Weekly Data
+  $query->addExpression("FROM_UNIXTIME(date, '%U')", 'time_interval');
   $query->range(0, $config->get('download_count_details_weekly_limit'));
   $result = $query->execute();
   $weekly = _download_count_details_table($result, 'Weekly', 'Week');
   $output .= $weekly['output'];
-  if ($sparkline_type != 'none') {
-    $values['weekly'] = implode(',', array_reverse($weekly['values']));
-    $output .= '<div class="download-count-sparkline-weekly">' . t('Rendering Sparkline...') . '</div>';
-  }
+  $values['weekly'] = implode(',', array_reverse($weekly['values']));
+  $output .= '<div class="peity-data" data-values="' . $values['weekly'] . '"></div>';
 
-  // monthly data
-  $expressions['time_interval']['expression'] = "FROM_UNIXTIME(date, '%Y-%m')";
+  // Monthly Data
+  $query->addExpression("FROM_UNIXTIME(date, '%Y-%m')", 'time_interval');
   $query->range(0, $config->get('download_count_details_monthly_limit'));
   $result = $query->execute();
   $monthly = _download_count_details_table($result, 'Monthly', 'Month');
   $output .= $monthly['output'];
-  if ($sparkline_type != 'none') {
-    $values['monthly'] = implode(',', array_reverse($monthly['values']));
-    $output .= '<div class="download-count-sparkline-monthly">' . t('Rendering Sparkline...') . '</div>';
-  }
-
-  // yearly data
-  $expressions['time_interval']['expression'] = "FROM_UNIXTIME(date, '%Y')";
-  $query->range(0, $config->get('download_count_details_yearly_limit'));
-  $result = $query->execute();
-  $yearly = _download_count_details_table($result, 'Yearly', 'Year');
-  $output .= $yearly['output'];
-  if ($sparkline_type != 'none') {
-    $values['yearly'] = implode(',', array_reverse($yearly['values']));
-    $output .= '<div class="download-count-sparkline-yearly">' . t('Rendering Sparkline...') . '</div>';
-  }
-  $output .= '<div id="download-count-total-bottom"><strong>' . t('Total Downloads:') . '</strong> ' . $total . '</div>';
-
-  if ($sparkline_type != 'none') {
-    backdrop_add_library('download_count', 'jquery.sparkline');
-    backdrop_add_js(backdrop_get_path('module', 'download_count') . '/js/download_count_sparklines.js');
-    $settings['download_count'] = array(
-      'values' => $values,
-      'type' => $sparkline_type,
-      'min' => $config->get('download_count_sparkline_min'),
-      'height' => $config->get('download_count_sparkline_height'),
-      'width' => $config->get('download_count_sparkline_width'),
-    );
-    backdrop_add_js($settings, array('type' => 'setting'));
-  }
+  $values['monthly'] = implode(',', array_reverse($monthly['values']));
+  $output .= '<div class="peity-data" data-values="' . $values['monthly'] . '"></div>';
 
   return $output;
 }
@@ -368,9 +309,11 @@ function _download_count_details_table($result, $caption, $range) {
       'class' => 'count',
     ),
   );
+
   $count = 1;
   $rows = array();
-  $values = array();
+  $values = array(); // Ensure it is always defined
+
   foreach ($result as $download) {
     $row = array();
     $row[] = $count;
@@ -380,6 +323,18 @@ function _download_count_details_table($result, $caption, $range) {
     $rows[] = $row;
     $count++;
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => $caption, 'sticky' => FALSE, 'attributes' => array('id' => 'download-count-' . backdrop_strtolower(backdrop_clean_css_identifier($caption)), 'class' => 'download-count-details download-count-table')));
+
+  $output = theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'caption' => $caption,
+    'sticky' => FALSE,
+    'attributes' => array(
+      'id' => 'download-count-' . backdrop_strtolower(backdrop_clean_css_identifier($caption)),
+      'class' => 'download-count-details download-count-table'
+    ),
+  ));
+
   return array('output' => $output, 'values' => $values);
 }
+

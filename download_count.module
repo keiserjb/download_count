@@ -112,35 +112,53 @@ function download_count_entry_load($dcid) {
 }
 
 /**
- * Implements hook_preprocess_page().
- */
-function download_count_preprocess_page(&$variables) {
-  if (current_path() == 'admin/reports/download-count') {
-    // Add Sparkline library
-    backdrop_add_library('download_count', 'jquery.sparkline');
-
-    // Add custom script after Sparkline
-    backdrop_add_js(backdrop_get_path('module', 'download_count') . '/js/download_count_sparklines.js');
-  }
-}
-
-/**
  * Implements hook_library_info().
  */
 function download_count_library_info() {
-  $path = backdrop_get_path('module', 'download_count') . '/js/jquery.sparkline.min.js';
+  $path = backdrop_get_path('module', 'download_count') . '/js';
 
-  $libraries['jquery.sparkline'] = array(
-    'title' => 'jQuery Sparkline',
-    'website' => 'http://www.omnipotent.net/jquery.sparkline/',
-    'version' => '1.6',
-    'js' => array(
-      $path => array('dependencies' => array('core/jquery')),  // Ensure jQuery loads first
+  return array(
+    'peity_vanilla' => array(
+      'title' => 'Peity Vanilla',
+      'website' => 'https://github.com/railsjazz/peity_vanilla',
+      'version' => '1.6', // Explicitly define version
+      'js' => array(
+        "$path/peity-vanilla.min.js" => array(
+          'minified' => TRUE,
+          'dependencies' => array('core/jquery'), // Ensure jQuery loads first
+        ),
+      ),
+    ),
+    'download_count_chart' => array(
+      'title' => 'Download Count Charts',
+      'version' => '1.0', // Add a version number here
+      'js' => array(
+        "$path/download_count_chart.js" => array(
+          'dependencies' => array('core/jquery', 'peity_vanilla'), // Ensure Peity loads first
+        ),
+      ),
+    ),
+    'download_count_export' => array(
+      'title' => 'Download Count Export Form Behavior',
+      'version' => '1.0', // Add a version number here
+      'js' => array(
+        "$path/download_count.js" => array(
+          'dependencies' => array('core/jquery'),
+        ),
+      ),
+    ),
+    'download_count_css' => array(
+      'title' => 'Download Count Styling',
+      'version' => '1.0', // Add a version number here
+      'css' => array(
+        'theme' => array(
+          backdrop_get_path('module', 'download_count') . '/css/download_count.css' => array(),
+        ),
+      ),
     ),
   );
-
-  return $libraries;
 }
+
 
 /**
  * Implements hook_config_info().
@@ -154,13 +172,78 @@ function download_count_config_info() {
 }
 
 /**
+ * Implements hook_file_transfer().
+ *
+ * Ensures download counts are logged for both "Generic File" and "Download Link" formats.
+ */
+function download_count_file_transfer($file) {
+  global $user;
+  $time = REQUEST_TIME;
+
+  // If $file is a string (file path), try to load the file entity.
+  if (is_string($file)) {
+    $file_entity = db_query("SELECT * FROM {file_managed} WHERE uri = :uri", [':uri' => $file])->fetchObject();
+    if (!$file_entity) {
+      watchdog('download_count', 'File not found in database for URI: @uri', ['@uri' => $file], WATCHDOG_WARNING);
+      return;
+    }
+    $file = $file_entity; // Use the loaded file entity.
+  }
+
+  // Ensure $file now has an FID.
+  if (empty($file->fid)) {
+    watchdog('download_count', 'Invalid file entity, missing FID for URI: @uri', ['@uri' => $file->uri], WATCHDOG_WARNING);
+    return;
+  }
+
+  watchdog('download_count', 'hook_file_transfer triggered for FID: @fid, IP: @ip, URI: @uri', [
+    '@fid' => $file->fid,
+    '@ip' => ip_address(),
+    '@uri' => $_SERVER['REQUEST_URI'],
+  ], WATCHDOG_DEBUG);
+
+  // Prevent duplicate counts within 5 seconds.
+  $existing = db_query('SELECT 1 FROM {download_count} WHERE fid = :fid AND uid = :uid AND timestamp > :recent_time', [
+    ':fid' => $file->fid,
+    ':uid' => $user->uid,
+    ':recent_time' => $time - 5,
+  ])->fetchField();
+
+  if ($existing) {
+    watchdog('download_count', 'Skipping duplicate download count entry for FID: @fid', ['@fid' => $file->fid], WATCHDOG_DEBUG);
+    return;
+  }
+
+  // Capture referrer safely.
+  $referrer = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : NULL;
+
+  // Count the download.
+  db_insert('download_count')
+    ->fields([
+      'fid' => $file->fid,
+      'uid' => $user->uid,
+      'ip_address' => ip_address(),
+      'referrer' => $referrer, // Ensure referrer is explicitly set
+      'timestamp' => $time,
+    ])
+    ->execute();
+
+  // Register flood event to prevent excessive downloads from being counted.
+  flood_register_event('download_count-fid_' . $file->fid, 3600);
+
+  watchdog('download_count', 'Download counted for FID: @fid via hook_file_transfer', [
+    '@fid' => $file->fid,
+    '@uri' => $_SERVER['REQUEST_URI'],
+  ], WATCHDOG_NOTICE);
+}
+
+/**
  * Implements hook_file_download_access_alter().
  */
 function download_count_file_download_access_alter(&$grants, $field, $entity_type, $entity) {
   $config = config('download_count.settings');
   $time = REQUEST_TIME;
-
-  global $user; // Get the current user.
+  global $user;
 
   // Ensure the field is a file field and retrieve the file from the entity.
   if ($field['type'] !== 'file') {
@@ -180,32 +263,61 @@ function download_count_file_download_access_alter(&$grants, $field, $entity_typ
     return;
   }
 
+  // Log function trigger.
+  watchdog('download_count', 'Function triggered for FID: @fid, IP: @ip, Method: @method, URI: @uri', [
+    '@fid' => $file->fid,
+    '@ip' => ip_address(),
+    '@method' => $_SERVER['REQUEST_METHOD'],
+    '@uri' => $_SERVER['REQUEST_URI'],
+  ], WATCHDOG_DEBUG);
+
+  // Ensure only GET requests are counted (ignore HEAD and other requests).
+  if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    return;
+  }
+
   // If the role should be skipped, return.
   if (user_access('skip download counts')) {
     return;
   }
 
-  // If no access, simply return.
+  // If no access, return.
   if (!in_array(TRUE, $grants)) {
     return;
   }
 
-  // Check flood control.
+  // Detect if this is a "Download Link" request (tokenized download).
+  $is_download_link = (isset($_GET['token']) && strpos($_SERVER['REQUEST_URI'], '/file/') !== FALSE);
+
+  // Check flood control to prevent duplicate entries.
   $flood_limit = $config->get('download_count_flood_limit');
   if ($flood_limit > 0) {
     $flood_window = $config->get('download_count_flood_window');
     if (!flood_is_allowed('download_count-fid_' . $file->fid, $flood_limit, $flood_window)) {
+      watchdog('download_count', 'Flood control blocked duplicate count for FID: @fid', ['@fid' => $file->fid], WATCHDOG_NOTICE);
       return;
     }
   }
 
   // Validate file extension.
   $extensions = explode(' ', backdrop_strtolower(trim($config->get('download_count_excluded_file_extensions'))));
-  if (count($extensions)) {
+  if (!empty($extensions)) {
     $extension = backdrop_strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
     if (in_array($extension, $extensions)) {
       return;
     }
+  }
+
+  // Prevent duplicate counts within 5 seconds.
+  $existing = db_query('SELECT 1 FROM {download_count} WHERE fid = :fid AND uid = :uid AND timestamp > :recent_time', [
+    ':fid' => $file->fid,
+    ':uid' => $user->uid,
+    ':recent_time' => $time - 5,
+  ])->fetchField();
+
+  if ($existing) {
+    watchdog('download_count', 'Skipping duplicate download count entry for FID: @fid', ['@fid' => $file->fid], WATCHDOG_DEBUG);
+    return;
   }
 
   // Count the download.
@@ -214,7 +326,7 @@ function download_count_file_download_access_alter(&$grants, $field, $entity_typ
   $referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : NULL;
 
   db_insert('download_count')
-    ->fields(array(
+    ->fields([
       'fid' => $file->fid,
       'uid' => $user->uid,
       'type' => $entity_type,
@@ -222,14 +334,20 @@ function download_count_file_download_access_alter(&$grants, $field, $entity_typ
       'ip_address' => $ip,
       'referrer' => $referrer,
       'timestamp' => $time,
-    ))
+    ])
     ->execute();
 
+  // Register flood event to prevent excessive downloads.
   flood_register_event('download_count-fid_' . $file->fid, 3600);
 
   if (module_exists('rules')) {
     rules_invoke_event('download_count_file_download', $file, $user, $entity);
   }
+
+  watchdog('download_count', 'Download counted for FID: @fid, URI: @uri', [
+    '@fid' => $file->fid,
+    '@uri' => $_SERVER['REQUEST_URI'],
+  ], WATCHDOG_NOTICE);
 }
 
 /**
